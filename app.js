@@ -1,11 +1,18 @@
-// Blog Application with Admin Authentication - FIXED VERSION
+// Blog Application - ULTRA FIXED VERSION
+// Dodatkowe zabezpieczenia dla problemu z zapisywaniem wpisów
+
+console.log('🎯 ULTRA FIXED VERSION - Loading blog application...');
+
 class BlogApp {
   constructor() {
+    console.log('🏗️ BlogApp constructor called');
+
     this.posts = [];
     this.currentEditId = null;
     this.currentDeleteId = null;
     this.postIdCounter = 1;
     this.commentIdCounter = 1;
+    this.debugMode = true; // Włącz tryb debug
 
     // Admin authentication system
     this.admin = {
@@ -15,27 +22,113 @@ class BlogApp {
       isLoggedIn: false
     };
 
-    // Wait for DOM to be ready
+    console.log('💾 Admin config:', this.admin);
+
+    // Bezpieczna inicjalizacja
+    this.initWithRetry();
+  }
+
+  initWithRetry(attempts = 3) {
+    console.log(`🔄 Attempting initialization (attempt ${4-attempts})`);
+
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', () => this.init());
+      console.log('⏳ Waiting for DOM...');
+      document.addEventListener('DOMContentLoaded', () => {
+        console.log('✅ DOM loaded, initializing...');
+        this.safeInit();
+      });
     } else {
-      this.init();
+      console.log('✅ DOM ready, initializing immediately...');
+      this.safeInit();
     }
   }
 
-  init() {
-    console.log('🚀 Blog App initializing...');
-    this.initializeData();
-    this.initializeEventListeners();
-    this.renderPosts();
-    this.renderRecentPosts();
-    this.updateAdminUI();
-    this.updateStats();
-    console.log('✅ Blog App initialized successfully');
+  safeInit() {
+    try {
+      console.log('🚀 Starting safe initialization...');
+
+      this.initializeData();
+      this.initializeEventListeners();
+      this.renderPosts();
+      this.renderRecentPosts();
+      this.updateAdminUI();
+      this.updateStats();
+
+      // Dodaj dodatkowy event listener po 1 sekundzie dla pewności
+      setTimeout(() => {
+        this.reinforceEventListeners();
+      }, 1000);
+
+      console.log('🎉 Blog application initialized successfully!');
+
+      // Wyświetl diagnostykę
+      this.runDiagnostics();
+
+    } catch (error) {
+      console.error('❌ Error during initialization:', error);
+      // Spróbuj ponownie za 2 sekundy
+      setTimeout(() => {
+        console.log('🔄 Retrying initialization...');
+        this.safeInit();
+      }, 2000);
+    }
+  }
+
+  runDiagnostics() {
+    console.log('🔍 DIAGNOSTYKA:');
+    console.log('📊 Posts loaded:', this.posts.length);
+    console.log('🔐 Admin logged in:', this.admin.isLoggedIn);
+    console.log('🆔 Next post ID:', this.postIdCounter);
+
+    // Sprawdź kluczowe elementy DOM
+    const elements = {
+      'loginBtn': document.getElementById('loginBtn'),
+      'addPostBtn': document.getElementById('addPostBtn'),
+      'postForm': document.getElementById('postForm'),
+      'postsContainer': document.getElementById('postsContainer')
+    };
+
+    for (const [name, element] of Object.entries(elements)) {
+      if (element) {
+        console.log(`✅ ${name} found`);
+      } else {
+        console.warn(`⚠️ ${name} NOT found`);
+      }
+    }
+  }
+
+  reinforceEventListeners() {
+    console.log('🔧 Reinforcing event listeners...');
+
+    // Dodatkowy listener dla przycisku dodawania postów
+    const addPostBtn = document.getElementById('addPostBtn');
+    if (addPostBtn) {
+      // Usuń stary listener (gdyby był)
+      addPostBtn.removeEventListener('click', this.handleAddPostClick);
+
+      // Dodaj nowy listener
+      this.handleAddPostClick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🎯 ADD POST CLICKED via reinforced listener');
+        this.showAddPostModal();
+      };
+
+      addPostBtn.addEventListener('click', this.handleAddPostClick);
+      console.log('✅ Add post button reinforced');
+
+      // Dodaj onclick jako backup
+      addPostBtn.onclick = (e) => {
+        e.preventDefault();
+        console.log('🎯 ADD POST CLICKED via onclick backup');
+        this.showAddPostModal();
+      };
+    }
   }
 
   initializeData() {
-    // Sample posts data with working image URLs
+    console.log('📄 Loading sample data...');
+
     this.posts = [
       {
         id: 1,
@@ -86,19 +179,43 @@ class BlogApp {
       }
     ];
 
-    // Set counter to next available ID
+    // Ustaw liczniki
     this.postIdCounter = Math.max(...this.posts.map(p => p.id)) + 1;
     this.commentIdCounter = Math.max(
       ...this.posts.flatMap(p => p.comments.map(c => c.id))
     ) + 1;
 
-    console.log('📄 Sample data loaded:', this.posts.length, 'posts');
+    console.log('✅ Sample data loaded:', this.posts.length, 'posts');
+    console.log('🆔 Next post ID will be:', this.postIdCounter);
   }
 
   initializeEventListeners() {
     console.log('🔗 Setting up event listeners...');
 
-    // Login/Logout handlers
+    try {
+      // Login/Logout handlers
+      this.setupAuthHandlers();
+
+      // Admin settings
+      this.setupAdminHandlers();
+
+      // Post management
+      this.setupPostHandlers();
+
+      // Delete confirmation
+      this.setupDeleteHandlers();
+
+      // ESC key
+      this.setupKeyboardHandlers();
+
+      console.log('✅ All event listeners set up');
+
+    } catch (error) {
+      console.error('❌ Error setting up event listeners:', error);
+    }
+  }
+
+  setupAuthHandlers() {
     const loginBtn = document.getElementById('loginBtn');
     const logoutBtn = document.getElementById('logoutBtn');
 
@@ -107,6 +224,7 @@ class BlogApp {
         console.log('🔐 Login button clicked');
         this.showLoginModal();
       });
+      console.log('✅ Login button handler set');
     }
 
     if (logoutBtn) {
@@ -114,92 +232,115 @@ class BlogApp {
         console.log('🚪 Logout button clicked');
         this.logout();
       });
+      console.log('✅ Logout button handler set');
     }
 
-    // Login modal handlers
+    // Login form
     const loginForm = document.getElementById('loginForm');
-    const loginClose = document.getElementById('loginClose');
-    const loginCancel = document.getElementById('loginCancel');
-    const loginOverlay = document.getElementById('loginOverlay');
-
     if (loginForm) {
       loginForm.addEventListener('submit', (e) => this.handleLogin(e));
+      console.log('✅ Login form handler set');
     }
-    if (loginClose) {
-      loginClose.addEventListener('click', () => this.hideLoginModal());
-    }
-    if (loginCancel) {
-      loginCancel.addEventListener('click', () => this.hideLoginModal());
-    }
+
+    // Login modal close handlers
+    ['loginClose', 'loginCancel'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('click', () => this.hideLoginModal());
+    });
+
+    const loginOverlay = document.getElementById('loginOverlay');
     if (loginOverlay) {
       loginOverlay.addEventListener('click', () => this.hideLoginModal());
     }
+  }
 
-    // Admin settings form
+  setupAdminHandlers() {
     const adminSettingsForm = document.getElementById('adminSettingsForm');
     if (adminSettingsForm) {
       adminSettingsForm.addEventListener('submit', (e) => this.handleAdminSettings(e));
+      console.log('✅ Admin settings handler set');
     }
+  }
 
-    // Add Post button - NAPRAWIONY HANDLER
+  setupPostHandlers() {
+    // GŁÓWNY HANDLER dla dodawania postów - WZMOCNIONY
     const addPostBtn = document.getElementById('addPostBtn');
     if (addPostBtn) {
-      console.log('✅ Add Post button found, attaching listener');
+      console.log('🎯 Found add post button, setting up handlers...');
+
+      // Handler 1: addEventListener
       addPostBtn.addEventListener('click', (e) => {
         e.preventDefault();
-        console.log('➕ Add Post button clicked');
+        e.stopPropagation();
+        console.log('🎯 ADD POST CLICKED (addEventListener)');
         this.showAddPostModal();
       });
+
+      // Handler 2: onclick jako backup
+      addPostBtn.onclick = (e) => {
+        e.preventDefault();
+        console.log('🎯 ADD POST CLICKED (onclick backup)');
+        this.showAddPostModal();
+      };
+
+      console.log('✅ Add post button handlers set (both addEventListener and onclick)');
     } else {
-      console.warn('⚠️ Add Post button not found');
+      console.warn('⚠️ Add post button not found');
     }
 
-    // Post management handlers
+    // Post form
     const postForm = document.getElementById('postForm');
-    const modalClose = document.getElementById('modalClose');
-    const postCancel = document.getElementById('postCancel');
-    const modalOverlay = document.getElementById('modalOverlay');
-
     if (postForm) {
-      postForm.addEventListener('submit', (e) => this.handlePostSubmit(e));
+      postForm.addEventListener('submit', (e) => {
+        console.log('📝 Post form submitted');
+        this.handlePostSubmit(e);
+      });
+      console.log('✅ Post form handler set');
     }
-    if (modalClose) {
-      modalClose.addEventListener('click', () => this.hidePostModal());
-    }
-    if (postCancel) {
-      postCancel.addEventListener('click', () => this.hidePostModal());
-    }
+
+    // Post modal close handlers
+    ['modalClose', 'postCancel'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.addEventListener('click', () => {
+        console.log(`❌ Closing post modal via ${id}`);
+        this.hidePostModal();
+      });
+    });
+
+    const modalOverlay = document.getElementById('modalOverlay');
     if (modalOverlay) {
-      modalOverlay.addEventListener('click', () => this.hidePostModal());
+      modalOverlay.addEventListener('click', () => {
+        console.log('❌ Closing post modal via overlay');
+        this.hidePostModal();
+      });
     }
+  }
 
-    // Delete confirmation handlers
-    const deleteConfirm = document.getElementById('deleteConfirm');
-    const deleteClose = document.getElementById('deleteClose');
-    const deleteCancel = document.getElementById('deleteCancel');
-    const deleteOverlay = document.getElementById('deleteOverlay');
-
-    if (deleteConfirm) {
-      deleteConfirm.addEventListener('click', () => this.confirmDelete());
-    }
-    if (deleteClose) {
-      deleteClose.addEventListener('click', () => this.hideDeleteModal());
-    }
-    if (deleteCancel) {
-      deleteCancel.addEventListener('click', () => this.hideDeleteModal());
-    }
-    if (deleteOverlay) {
-      deleteOverlay.addEventListener('click', () => this.hideDeleteModal());
-    }
-
-    // ESC key to close modals
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape') {
-        this.hideAllModals();
+  setupDeleteHandlers() {
+    ['deleteConfirm', 'deleteClose', 'deleteCancel'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) {
+        if (id === 'deleteConfirm') {
+          el.addEventListener('click', () => this.confirmDelete());
+        } else {
+          el.addEventListener('click', () => this.hideDeleteModal());
+        }
       }
     });
 
-    console.log('✅ Event listeners set up successfully');
+    const deleteOverlay = document.getElementById('deleteOverlay');
+    if (deleteOverlay) {
+      deleteOverlay.addEventListener('click', () => this.hideDeleteModal());
+    }
+  }
+
+  setupKeyboardHandlers() {
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        console.log('⌨️ ESC pressed, closing modals');
+        this.hideAllModals();
+      }
+    });
   }
 
   // Authentication methods
@@ -209,9 +350,8 @@ class BlogApp {
     if (loginModal) {
       loginModal.classList.remove('hidden');
       const usernameInput = document.getElementById('loginUsername');
-      if (usernameInput) {
-        usernameInput.focus();
-      }
+      if (usernameInput) usernameInput.focus();
+      console.log('✅ Login modal shown');
     }
   }
 
@@ -219,12 +359,8 @@ class BlogApp {
     console.log('❌ Hiding login modal');
     const loginModal = document.getElementById('loginModal');
     const loginForm = document.getElementById('loginForm');
-    if (loginModal) {
-      loginModal.classList.add('hidden');
-    }
-    if (loginForm) {
-      loginForm.reset();
-    }
+    if (loginModal) loginModal.classList.add('hidden');
+    if (loginForm) loginForm.reset();
   }
 
   handleLogin(e) {
@@ -234,7 +370,7 @@ class BlogApp {
     const username = document.getElementById('loginUsername').value.trim();
     const password = document.getElementById('loginPassword').value.trim();
 
-    console.log('👤 Login attempt:', username);
+    console.log('👤 Login attempt for:', username);
 
     if (username === this.admin.login && password === this.admin.password) {
       this.admin.isLoggedIn = true;
@@ -242,6 +378,12 @@ class BlogApp {
       this.updateAdminUI();
       this.showToast('🎉 Pomyślnie zalogowano!', 'success');
       console.log('✅ Login successful');
+
+      // Ponownie ustaw event listenery po zalogowaniu
+      setTimeout(() => {
+        this.reinforceEventListeners();
+      }, 500);
+
     } else {
       this.showToast('❌ Nieprawidłowy login lub hasło!', 'error');
       console.log('❌ Login failed');
@@ -258,31 +400,38 @@ class BlogApp {
   updateAdminUI() {
     console.log('🎨 Updating admin UI, logged in:', this.admin.isLoggedIn);
 
-    const loginBtn = document.getElementById('loginBtn');
-    const adminStatus = document.getElementById('adminStatus');
-    const adminPanel = document.getElementById('adminPanel');
-    const adminActions = document.getElementById('adminActions');
+    const elements = {
+      loginBtn: document.getElementById('loginBtn'),
+      adminStatus: document.getElementById('adminStatus'),
+      adminPanel: document.getElementById('adminPanel'),
+      adminActions: document.getElementById('adminActions')
+    };
 
     if (this.admin.isLoggedIn) {
       // Show admin elements
-      if (loginBtn) loginBtn.classList.add('hidden');
-      if (adminStatus) adminStatus.classList.remove('hidden');
-      if (adminPanel) adminPanel.classList.remove('hidden');
-      if (adminActions) adminActions.classList.remove('hidden');
+      if (elements.loginBtn) elements.loginBtn.classList.add('hidden');
+      if (elements.adminStatus) elements.adminStatus.classList.remove('hidden');
+      if (elements.adminPanel) elements.adminPanel.classList.remove('hidden');
+      if (elements.adminActions) elements.adminActions.classList.remove('hidden');
       document.body.classList.add('admin-logged-in');
 
       // Update admin settings form
       this.updateAdminSettingsForm();
-
       console.log('👑 Admin UI enabled');
+
+      // Upewnij się, że przycisk dodawania jest widoczny
+      const addPostBtn = document.getElementById('addPostBtn');
+      if (addPostBtn) {
+        console.log('✅ Add post button should now be visible');
+      }
+
     } else {
       // Hide admin elements
-      if (loginBtn) loginBtn.classList.remove('hidden');
-      if (adminStatus) adminStatus.classList.add('hidden');
-      if (adminPanel) adminPanel.classList.add('hidden');
-      if (adminActions) adminActions.classList.add('hidden');
+      if (elements.loginBtn) elements.loginBtn.classList.remove('hidden');
+      if (elements.adminStatus) elements.adminStatus.classList.add('hidden');
+      if (elements.adminPanel) elements.adminPanel.classList.add('hidden');
+      if (elements.adminActions) elements.adminActions.classList.add('hidden');
       document.body.classList.remove('admin-logged-in');
-
       console.log('👤 Admin UI disabled');
     }
 
@@ -291,13 +440,15 @@ class BlogApp {
   }
 
   updateAdminSettingsForm() {
-    const adminLogin = document.getElementById('adminLogin');
-    const adminPassword = document.getElementById('adminPassword');
-    const adminEmail = document.getElementById('adminEmail');
+    const fields = {
+      adminLogin: document.getElementById('adminLogin'),
+      adminPassword: document.getElementById('adminPassword'),
+      adminEmail: document.getElementById('adminEmail')
+    };
 
-    if (adminLogin) adminLogin.value = this.admin.login;
-    if (adminPassword) adminPassword.value = this.admin.password;
-    if (adminEmail) adminEmail.value = this.admin.email;
+    if (fields.adminLogin) fields.adminLogin.value = this.admin.login;
+    if (fields.adminPassword) fields.adminPassword.value = this.admin.password;
+    if (fields.adminEmail) fields.adminEmail.value = this.admin.email;
   }
 
   handleAdminSettings(e) {
@@ -318,26 +469,13 @@ class BlogApp {
     this.admin.email = newEmail;
 
     this.showToast('✅ Ustawienia zostały zapisane!', 'success');
-    console.log('✅ Admin settings saved');
+    console.log('✅ Admin settings saved:', this.admin);
   }
 
-  updateStats() {
-    const postsCount = document.getElementById('postsCount');
-    const commentsCount = document.getElementById('commentsCount');
-
-    if (postsCount) {
-      postsCount.textContent = this.posts.length;
-    }
-
-    if (commentsCount) {
-      const totalComments = this.posts.reduce((sum, post) => sum + post.comments.length, 0);
-      commentsCount.textContent = totalComments;
-    }
-  }
-
-  // Post management methods - NAPRAWIONE
+  // Post management - SUPER WZMOCNIONE
   showAddPostModal() {
-    console.log('➕ Showing add post modal, admin logged in:', this.admin.isLoggedIn);
+    console.log('🎯 SHOW ADD POST MODAL called');
+    console.log('🔐 Admin logged in:', this.admin.isLoggedIn);
 
     if (!this.admin.isLoggedIn) {
       this.showToast('🔐 Musisz być zalogowany jako administrator!', 'error');
@@ -347,50 +485,38 @@ class BlogApp {
 
     this.currentEditId = null;
 
-    const modalTitle = document.getElementById('modalTitle');
-    const postForm = document.getElementById('postForm');
-    const postModal = document.getElementById('postModal');
-    const postTitle = document.getElementById('postTitle');
+    const elements = {
+      modalTitle: document.getElementById('modalTitle'),
+      postForm: document.getElementById('postForm'),
+      postModal: document.getElementById('postModal'),
+      postTitle: document.getElementById('postTitle')
+    };
 
-    if (modalTitle) modalTitle.textContent = '📝 Dodaj nowy wpis';
-    if (postForm) postForm.reset();
-    if (postModal) {
-      postModal.classList.remove('hidden');
-      console.log('✅ Add post modal shown');
+    console.log('🔍 Modal elements check:');
+    Object.entries(elements).forEach(([name, el]) => {
+      console.log(`${el ? '✅' : '❌'} ${name}`);
+    });
+
+    if (elements.modalTitle) elements.modalTitle.textContent = '📝 Dodaj nowy wpis';
+    if (elements.postForm) {
+      elements.postForm.reset();
+      console.log('✅ Form reset');
     }
-    if (postTitle) postTitle.focus();
-  }
 
-  showEditPostModal(postId) {
-    console.log('✏️ Showing edit post modal for post:', postId);
-
-    if (!this.admin.isLoggedIn) {
-      this.showToast('🔐 Musisz być zalogowany jako administrator!', 'error');
+    if (elements.postModal) {
+      elements.postModal.classList.remove('hidden');
+      console.log('✅ Modal shown');
+    } else {
+      console.error('❌ Post modal not found!');
+      this.showToast('❌ Błąd: Nie można otworzyć formularza', 'error');
       return;
     }
 
-    const post = this.posts.find(p => p.id === postId);
-    if (!post) {
-      console.log('❌ Post not found:', postId);
-      return;
+    if (elements.postTitle) {
+      setTimeout(() => elements.postTitle.focus(), 100);
     }
 
-    this.currentEditId = postId;
-
-    const modalTitle = document.getElementById('modalTitle');
-    const postTitle = document.getElementById('postTitle');
-    const postImage = document.getElementById('postImage');
-    const postContent = document.getElementById('postContent');
-    const postModal = document.getElementById('postModal');
-
-    if (modalTitle) modalTitle.textContent = '✏️ Edytuj wpis';
-    if (postTitle) postTitle.value = post.title;
-    if (postImage) postImage.value = post.imageUrl || '';
-    if (postContent) postContent.value = post.content;
-    if (postModal) postModal.classList.remove('hidden');
-    if (postTitle) postTitle.focus();
-
-    console.log('✅ Edit modal shown for post:', post.title);
+    console.log('🎉 Add post modal opened successfully');
   }
 
   hidePostModal() {
@@ -401,118 +527,134 @@ class BlogApp {
     if (postModal) postModal.classList.add('hidden');
     if (postForm) postForm.reset();
     this.currentEditId = null;
+    console.log('✅ Post modal hidden');
   }
 
   handlePostSubmit(e) {
     e.preventDefault();
-    console.log('💾 Handling post submit...');
+    console.log('💾 HANDLE POST SUBMIT called');
+    console.log('🔐 Admin logged in:', this.admin.isLoggedIn);
+    console.log('✏️ Current edit ID:', this.currentEditId);
 
     if (!this.admin.isLoggedIn) {
       this.showToast('❌ Brak uprawnień!', 'error');
+      console.log('❌ No admin permissions');
       return;
     }
 
-    const title = document.getElementById('postTitle').value.trim();
-    const imageUrl = document.getElementById('postImage').value.trim();
-    const content = document.getElementById('postContent').value.trim();
+    // Pobierz dane z formularza
+    const formData = this.getFormData();
+    if (!formData) return;
 
-    console.log('📝 Post data:', { title, imageUrl: imageUrl || 'none', content: content.substring(0, 50) + '...' });
+    console.log('📝 Form data:', formData);
 
-    if (!title || !content) {
-      this.showToast('❌ Tytuł i treść są wymagane!', 'error');
-      console.log('❌ Validation failed');
-      return;
+    // Zapisz post
+    const success = this.savePost(formData);
+    if (!success) return;
+
+    // Odśwież interfejs
+    this.refreshUI();
+
+    console.log('🎉 Post submit completed successfully');
+  }
+
+  getFormData() {
+    const title = document.getElementById('postTitle')?.value?.trim() || '';
+    const imageUrl = document.getElementById('postImage')?.value?.trim() || '';
+    const content = document.getElementById('postContent')?.value?.trim() || '';
+
+    console.log('📊 Raw form data:');
+    console.log('  Title:', title);
+    console.log('  Image URL:', imageUrl || 'none');
+    console.log('  Content length:', content.length);
+
+    if (!title) {
+      this.showToast('❌ Tytuł jest wymagany!', 'error');
+      console.log('❌ Title validation failed');
+      return null;
     }
 
-    const now = new Date().toISOString().split('T')[0];
+    if (!content) {
+      this.showToast('❌ Treść jest wymagana!', 'error');
+      console.log('❌ Content validation failed');
+      return null;
+    }
 
-    if (this.currentEditId) {
-      // Edit existing post
-      console.log('✏️ Editing post:', this.currentEditId);
-      const postIndex = this.posts.findIndex(p => p.id === this.currentEditId);
-      if (postIndex !== -1) {
+    return { title, imageUrl, content };
+  }
+
+  savePost(formData) {
+    try {
+      const now = new Date().toISOString().split('T')[0];
+
+      if (this.currentEditId) {
+        // Edit existing post
+        console.log('✏️ Editing post:', this.currentEditId);
+        const postIndex = this.posts.findIndex(p => p.id === this.currentEditId);
+
+        if (postIndex === -1) {
+          console.error('❌ Post not found for editing:', this.currentEditId);
+          this.showToast('❌ Błąd: Wpis nie został znaleziony', 'error');
+          return false;
+        }
+
         this.posts[postIndex] = {
           ...this.posts[postIndex],
-          title,
-          imageUrl,
-          content
+          title: formData.title,
+          imageUrl: formData.imageUrl,
+          content: formData.content
         };
+
         this.showToast('✅ Wpis został zaktualizowany!', 'success');
-        console.log('✅ Post updated successfully');
+        console.log('✅ Post updated successfully:', this.posts[postIndex]);
+
+      } else {
+        // Add new post
+        console.log('➕ Adding new post');
+        const newPost = {
+          id: this.postIdCounter++,
+          title: formData.title,
+          imageUrl: formData.imageUrl,
+          content: formData.content,
+          date: now,
+          comments: []
+        };
+
+        // Dodaj na początek listy
+        this.posts.unshift(newPost);
+
+        this.showToast('🎉 Nowy wpis został dodany!', 'success');
+        console.log('✅ New post added successfully:', newPost);
+        console.log('📊 Total posts now:', this.posts.length);
       }
-    } else {
-      // Add new post
-      console.log('➕ Adding new post');
-      const newPost = {
-        id: this.postIdCounter++,
-        title,
-        imageUrl: imageUrl || '',
-        content,
-        date: now,
-        comments: []
-      };
-      this.posts.unshift(newPost); // Add to beginning
-      this.showToast('🎉 Nowy wpis został dodany!', 'success');
-      console.log('✅ New post added:', newPost.id, '-', newPost.title);
-    }
 
-    this.hidePostModal();
-    this.renderPosts();
-    this.renderRecentPosts();
-    this.updateStats();
-  }
+      return true;
 
-  showDeleteModal(postId) {
-    console.log('🗑️ Showing delete modal for post:', postId);
-
-    if (!this.admin.isLoggedIn) {
-      this.showToast('❌ Brak uprawnień!', 'error');
-      return;
-    }
-
-    this.currentDeleteId = postId;
-    const deleteModal = document.getElementById('deleteModal');
-    if (deleteModal) {
-      deleteModal.classList.remove('hidden');
+    } catch (error) {
+      console.error('❌ Error saving post:', error);
+      this.showToast('❌ Błąd podczas zapisywania wpisu', 'error');
+      return false;
     }
   }
 
-  hideDeleteModal() {
-    console.log('❌ Hiding delete modal');
-    const deleteModal = document.getElementById('deleteModal');
-    if (deleteModal) {
-      deleteModal.classList.add('hidden');
-    }
-    this.currentDeleteId = null;
-  }
+  refreshUI() {
+    console.log('🔄 Refreshing UI...');
 
-  confirmDelete() {
-    console.log('🗑️ Confirming delete for post:', this.currentDeleteId);
-
-    if (!this.currentDeleteId || !this.admin.isLoggedIn) return;
-
-    const postIndex = this.posts.findIndex(p => p.id === this.currentDeleteId);
-    if (postIndex !== -1) {
-      const deletedPost = this.posts[postIndex];
-      this.posts.splice(postIndex, 1);
-      this.hideDeleteModal();
+    try {
+      this.hidePostModal();
       this.renderPosts();
       this.renderRecentPosts();
       this.updateStats();
-      this.showToast('🗑️ Wpis został usunięty!', 'success');
-      console.log('✅ Post deleted:', deletedPost.title);
+      console.log('✅ UI refreshed successfully');
+    } catch (error) {
+      console.error('❌ Error refreshing UI:', error);
     }
-  }
-
-  hideAllModals() {
-    this.hideLoginModal();
-    this.hidePostModal();
-    this.hideDeleteModal();
   }
 
   // Rendering methods
   renderPosts() {
     console.log('🎨 Rendering', this.posts.length, 'posts...');
+
     const container = document.getElementById('postsContainer');
     if (!container) {
       console.error('❌ Posts container not found');
@@ -527,14 +669,17 @@ class BlogApp {
           ${this.admin.isLoggedIn ? '<p><strong>Jako administrator możesz dodać pierwszy wpis!</strong></p>' : ''}
         </div>
       `;
+      console.log('✅ Empty state rendered');
       return;
     }
 
-    container.innerHTML = this.posts.map(post => this.renderPost(post)).join('');
-
-    // Add event listeners for dynamically created elements
-    this.attachPostEventListeners();
-    console.log('✅ Posts rendered successfully');
+    try {
+      container.innerHTML = this.posts.map(post => this.renderPost(post)).join('');
+      this.attachPostEventListeners();
+      console.log('✅ Posts rendered successfully');
+    } catch (error) {
+      console.error('❌ Error rendering posts:', error);
+    }
   }
 
   renderPost(post) {
@@ -679,6 +824,88 @@ class BlogApp {
     console.log('✅ Post event listeners attached');
   }
 
+  showEditPostModal(postId) {
+    console.log('✏️ Showing edit post modal for post:', postId);
+
+    if (!this.admin.isLoggedIn) {
+      this.showToast('🔐 Musisz być zalogowany jako administrator!', 'error');
+      return;
+    }
+
+    const post = this.posts.find(p => p.id === postId);
+    if (!post) {
+      console.log('❌ Post not found:', postId);
+      return;
+    }
+
+    this.currentEditId = postId;
+
+    const elements = {
+      modalTitle: document.getElementById('modalTitle'),
+      postTitle: document.getElementById('postTitle'),
+      postImage: document.getElementById('postImage'),
+      postContent: document.getElementById('postContent'),
+      postModal: document.getElementById('postModal')
+    };
+
+    if (elements.modalTitle) elements.modalTitle.textContent = '✏️ Edytuj wpis';
+    if (elements.postTitle) elements.postTitle.value = post.title;
+    if (elements.postImage) elements.postImage.value = post.imageUrl || '';
+    if (elements.postContent) elements.postContent.value = post.content;
+    if (elements.postModal) elements.postModal.classList.remove('hidden');
+    if (elements.postTitle) elements.postTitle.focus();
+
+    console.log('✅ Edit modal shown for post:', post.title);
+  }
+
+  showDeleteModal(postId) {
+    console.log('🗑️ Showing delete modal for post:', postId);
+
+    if (!this.admin.isLoggedIn) {
+      this.showToast('❌ Brak uprawnień!', 'error');
+      return;
+    }
+
+    this.currentDeleteId = postId;
+    const deleteModal = document.getElementById('deleteModal');
+    if (deleteModal) {
+      deleteModal.classList.remove('hidden');
+    }
+  }
+
+  hideDeleteModal() {
+    console.log('❌ Hiding delete modal');
+    const deleteModal = document.getElementById('deleteModal');
+    if (deleteModal) {
+      deleteModal.classList.add('hidden');
+    }
+    this.currentDeleteId = null;
+  }
+
+  confirmDelete() {
+    console.log('🗑️ Confirming delete for post:', this.currentDeleteId);
+
+    if (!this.currentDeleteId || !this.admin.isLoggedIn) return;
+
+    const postIndex = this.posts.findIndex(p => p.id === this.currentDeleteId);
+    if (postIndex !== -1) {
+      const deletedPost = this.posts[postIndex];
+      this.posts.splice(postIndex, 1);
+      this.hideDeleteModal();
+      this.renderPosts();
+      this.renderRecentPosts();
+      this.updateStats();
+      this.showToast('🗑️ Wpis został usunięty!', 'success');
+      console.log('✅ Post deleted:', deletedPost.title);
+    }
+  }
+
+  hideAllModals() {
+    this.hideLoginModal();
+    this.hidePostModal();
+    this.hideDeleteModal();
+  }
+
   handleCommentSubmit(e, postId) {
     e.preventDefault();
     console.log('💌 Processing comment for post:', postId);
@@ -712,19 +939,14 @@ class BlogApp {
     post.comments.push(newComment);
     form.reset();
 
-    // Re-render the posts to show new comment
     this.renderPosts();
     this.updateStats();
-
-    // Simulate email notification
     this.simulateEmailNotification(newComment, post);
-
     this.showToast('✅ Komentarz został dodany!', 'success');
     console.log('✅ Comment added successfully:', newComment.authorName);
   }
 
   simulateEmailNotification(comment, post) {
-    // Simulate sending email notification to admin
     console.log('📧 === EMAIL NOTIFICATION ===');
     console.log('📧 Do:', this.admin.email);
     console.log('📧 Temat: Nowy komentarz w wpisie "' + post.title + '"');
@@ -732,10 +954,23 @@ class BlogApp {
     console.log('📧 Treść:', comment.content);
     console.log('📧 ===========================');
 
-    // Show notification about email being sent
     setTimeout(() => {
       this.showToast('📧 Powiadomienie wysłane na: ' + this.admin.email, 'info');
     }, 1000);
+  }
+
+  updateStats() {
+    const postsCount = document.getElementById('postsCount');
+    const commentsCount = document.getElementById('commentsCount');
+
+    if (postsCount) {
+      postsCount.textContent = this.posts.length;
+    }
+
+    if (commentsCount) {
+      const totalComments = this.posts.reduce((sum, post) => sum + post.comments.length, 0);
+      commentsCount.textContent = totalComments;
+    }
   }
 
   // Utility methods
@@ -763,6 +998,8 @@ class BlogApp {
     const container = document.getElementById('toastContainer');
     if (!container) {
       console.warn('⚠️ Toast container not found');
+      // Alternatywnie wyświetl alert
+      alert(message);
       return;
     }
 
@@ -772,10 +1009,8 @@ class BlogApp {
 
     container.appendChild(toast);
 
-    // Trigger animation
     setTimeout(() => toast.classList.add('show'), 100);
 
-    // Remove after 4 seconds
     setTimeout(() => {
       toast.classList.remove('show');
       setTimeout(() => {
@@ -787,12 +1022,40 @@ class BlogApp {
   }
 }
 
-// Initialize the application when script loads
-console.log('🎯 Initializing Blog Application...');
-const blogApp = new BlogApp();
+// ULTRA bezpieczna inicjalizacja
+console.log('🎯 Starting ULTRA FIXED blog application...');
 
-// Export for external access
-window.BlogApp = BlogApp;
-window.blogApp = blogApp;
+// Multiple initialization attempts
+let blogApp;
 
-console.log('🚀 Blog Application script loaded successfully!');
+function initBlogApp() {
+  try {
+    console.log('🚀 Attempting to initialize blog app...');
+    blogApp = new BlogApp();
+    window.BlogApp = BlogApp;
+    window.blogApp = blogApp;
+    console.log('🎉 Blog app initialized successfully!');
+  } catch (error) {
+    console.error('❌ Failed to initialize blog app:', error);
+    setTimeout(initBlogApp, 2000);
+  }
+}
+
+// Try immediate initialization
+if (document.readyState === 'complete' || document.readyState === 'interactive') {
+  console.log('📱 DOM ready, initializing immediately');
+  initBlogApp();
+} else {
+  console.log('⏳ Waiting for DOM to be ready');
+  document.addEventListener('DOMContentLoaded', initBlogApp);
+
+  // Backup initialization after 3 seconds
+  setTimeout(() => {
+    if (!window.blogApp) {
+      console.log('🔄 Backup initialization after 3s');
+      initBlogApp();
+    }
+  }, 3000);
+}
+
+console.log('✅ ULTRA FIXED blog script loaded!');
