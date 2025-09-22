@@ -125,6 +125,7 @@
             <div class="admin-nav">
                 <button class="btn btn-primary" onclick="showAddPostForm()">Dodaj nowy post</button>
                 <button class="btn btn-outline" onclick="showPostsList()">Lista postów</button>
+                <button class="btn btn-outline" onclick="showImageManager()">Zarządzanie obrazami</button>
             </div>
 
             <!-- Add/Edit Post Form -->
@@ -137,6 +138,52 @@
                         <input type="text" id="postTitle" class="form-control" required>
                     </div>
                     <div class="form-group">
+                        <label for="postContent">Treść:</label>
+                        <textarea id="postContent" class="form-control" rows="8" required></textarea>
+                    </div>
+                    
+                    <!-- Image Section -->
+                    <div class="form-group">
+                        <label class="form-label">Obraz:</label>
+                        <div class="image-upload-section">
+                            <div class="image-type-selector">
+                                <div class="radio-group">
+                                    <label class="radio-label">
+                                        <input type="radio" name="imageType" value="file" id="imageTypeFile" checked>
+                                        <span class="radio-icon">📁</span>
+                                        Upload z dysku
+                                    </label>
+                                    <label class="radio-label">
+                                        <input type="radio" name="imageType" value="url" id="imageTypeUrl">
+                                        <span class="radio-icon">🔗</span>
+                                        Link do obrazu
+                                    </label>
+                                </div>
+                            </div>
+                            
+                            <div id="fileUploadSection" class="upload-section">
+                                <input type="file" id="imageFile" class="form-control" accept="image/*">
+                                <small class="upload-help">Maksymalny rozmiar: 2MB. Obsługiwane formaty: JPG, PNG, GIF, WebP</small>
+                            </div>
+                            
+                            <div id="urlUploadSection" class="upload-section hidden">
+                                <input type="url" id="imageUrl" class="form-control" placeholder="https://przyklad.pl/obraz.jpg">
+                                <small class="upload-help">Wklej link do obrazu</small>
+                            </div>
+                            
+                            <div id="imagePreview" class="image-preview hidden">
+                                <img id="previewImage" alt="Podgląd obrazu">
+                                <div class="image-actions">
+                                    <button type="button" class="btn btn-sm btn-outline" onclick="removeImage()">Usuń obraz</button>
+                                </div>
+                            </div>
+                            
+                            <div id="imageError" class="error-message hidden"></div>
+                            <div id="imageLoading" class="loading-message hidden">Przetwarzanie obrazu...</div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
                         <label for="postCategory">Kategoria:</label>
                         <select id="postCategory" class="form-control" required>
                             <option value="">Wybierz kategorię</option>
@@ -144,14 +191,6 @@
                             <option value="Szybkie projekty">Szybkie projekty</option>
                             <option value="Popularne na Pinterest">Popularne na Pinterest</option>
                         </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="postContent">Treść:</label>
-                        <textarea id="postContent" class="form-control" rows="8" required></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="postImage">Obraz (nazwa pliku):</label>
-                        <input type="text" id="postImage" class="form-control" placeholder="np. moj-obraz.jpg">
                     </div>
                     <div class="form-group">
                         <label for="postDate">Data publikacji:</label>
@@ -168,6 +207,25 @@
             <div id="postsList" class="admin-section">
                 <h3>Lista postów</h3>
                 <div id="adminPostsList" class="admin-posts"></div>
+            </div>
+
+            <!-- Image Manager -->
+            <div id="imageManager" class="admin-section hidden">
+                <h3>Zarządzanie obrazami</h3>
+                <div class="image-stats">
+                    <div class="stat-item">
+                        <strong id="totalImages">0</strong>
+                        <span>Obrazy w użyciu</span>
+                    </div>
+                    <div class="stat-item">
+                        <strong id="storageUsed">0 KB</strong>
+                        <span>Wykorzystana przestrzeń</span>
+                    </div>
+                </div>
+                <div class="image-actions-bar">
+                    <button class="btn btn-outline" onclick="cleanupUnusedImages()">Usuń nieużywane obrazy</button>
+                </div>
+                <div id="imagesList" class="images-grid"></div>
             </div>
         </div>
     </div>
