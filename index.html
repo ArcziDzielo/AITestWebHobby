@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hobby - Moje pasje, moje życie</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Main Blog View -->
+    <div id="blogView" class="view active">
+        <!-- Header -->
+        <header class="header">
+            <div class="container">
+                <h1 class="logo">Hobby</h1>
+                <nav class="nav">
+                    <a href="#" class="nav-link">Strona Główna</a>
+                    <a href="#" class="nav-link" onclick="showCategory('all')">Wszystkie Posty</a>
+                    <a href="#" class="nav-link" onclick="showCategory('Kreatywne')">Kreatywne</a>
+                    <a href="#" class="nav-link" onclick="showCategory('Szybkie projekty')">Szybkie Projekty</a>
+                    <a href="#" class="nav-link" onclick="showAdminLogin()">Admin</a>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="container">
+                <h2 class="hero-title">Moje pasje, moje doświadczenia, moje życie.</h2>
+                <button class="btn btn-primary" onclick="showCategory('all')">+ Zobacz Wszystkie Posty</button>
+            </div>
+        </section>
+
+        <!-- Main Content -->
+        <main class="main">
+            <div class="container">
+                <div class="content-wrapper">
+                    <!-- Left Content -->
+                    <div class="content">
+                        <!-- Search Bar -->
+                        <div class="search-section">
+                            <input type="text" id="searchInput" placeholder="Wyszukaj posty..." class="form-control search-input">
+                        </div>
+
+                        <!-- Featured Section -->
+                        <section class="section">
+                            <h3 class="section-title">Obejrzyj Moje Ulubione Hobby</h3>
+                            <div id="featuredPosts" class="featured-posts"></div>
+                        </section>
+
+                        <!-- Latest Posts -->
+                        <section class="section">
+                            <h3 class="section-title">Najnowsze i Najlepsze</h3>
+                            <div id="latestPosts" class="post-grid"></div>
+                        </section>
+                    </div>
+
+                    <!-- Sidebar -->
+                    <aside class="sidebar">
+                        <div class="card author-card">
+                            <div class="author-avatar">
+                                <div class="avatar-placeholder">PH</div>
+                            </div>
+                            <h4>Cześć! Jestem Pasjonat Hobby. Miło Cię poznać!</h4>
+                            <p>Jestem pasjonatem hobby i dzielę się swoimi doświadczeniami. Mieszkam w Polsce. Ulubione rzeczy to moja kamera, weekendy z hobby i dobra kawa.</p>
+                        </div>
+
+                        <div class="card categories-card">
+                            <h4>Kategorie</h4>
+                            <ul class="category-list">
+                                <li><a href="#" onclick="showCategory('Kreatywne')">Kreatywne</a></li>
+                                <li><a href="#" onclick="showCategory('Szybkie projekty')">Szybkie projekty</a></li>
+                                <li><a href="#" onclick="showCategory('Popularne na Pinterest')">Popularne na Pinterest</a></li>
+                            </ul>
+                        </div>
+                    </aside>
+                </div>
+            </div>
+        </main>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="container">
+                <p>&copy; 2025 Hobby Blog. Wszystkie prawa zastrzeżone.</p>
+                <div class="footer-links">
+                    <a href="#">O mnie</a>
+                    <a href="#">Kontakt</a>
+                    <a href="#">Polityka prywatności</a>
+                </div>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Admin Login View -->
+    <div id="adminLoginView" class="view admin-view">
+        <div class="admin-container">
+            <div class="login-form">
+                <h2>Panel Administracyjny</h2>
+                <form id="loginForm">
+                    <div class="form-group">
+                        <label for="username">Login:</label>
+                        <input type="text" id="username" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="password">Hasło:</label>
+                        <input type="password" id="password" class="form-control" required>
+                    </div>
+                    <button type="submit" class="btn btn-primary btn-full-width">Zaloguj się</button>
+                </form>
+                <button class="btn btn-secondary btn-full-width" onclick="showBlogView()">Powrót do strony głównej</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Panel View -->
+    <div id="adminPanelView" class="view admin-view">
+        <div class="admin-header">
+            <div class="container">
+                <h1>Panel Administracyjny</h1>
+                <button class="btn btn-secondary" onclick="logout()">Wyloguj</button>
+            </div>
+        </div>
+        
+        <div class="admin-container">
+            <div class="admin-nav">
+                <button class="btn btn-primary" onclick="showAddPostForm()">Dodaj nowy post</button>
+                <button class="btn btn-outline" onclick="showPostsList()">Lista postów</button>
+            </div>
+
+            <!-- Add/Edit Post Form -->
+            <div id="postForm" class="admin-section hidden">
+                <h3 id="formTitle">Dodaj nowy post</h3>
+                <form id="addEditPostForm">
+                    <input type="hidden" id="editPostId">
+                    <div class="form-group">
+                        <label for="postTitle">Tytuł:</label>
+                        <input type="text" id="postTitle" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="postCategory">Kategoria:</label>
+                        <select id="postCategory" class="form-control" required>
+                            <option value="">Wybierz kategorię</option>
+                            <option value="Kreatywne">Kreatywne</option>
+                            <option value="Szybkie projekty">Szybkie projekty</option>
+                            <option value="Popularne na Pinterest">Popularne na Pinterest</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="postContent">Treść:</label>
+                        <textarea id="postContent" class="form-control" rows="8" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="postImage">Obraz (nazwa pliku):</label>
+                        <input type="text" id="postImage" class="form-control" placeholder="np. moj-obraz.jpg">
+                    </div>
+                    <div class="form-group">
+                        <label for="postDate">Data publikacji:</label>
+                        <input type="date" id="postDate" class="form-control" required>
+                    </div>
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Zapisz post</button>
+                        <button type="button" class="btn btn-secondary" onclick="cancelPostForm()">Anuluj</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Posts List -->
+            <div id="postsList" class="admin-section">
+                <h3>Lista postów</h3>
+                <div id="adminPostsList" class="admin-posts"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Post Detail Modal -->
+    <div id="postModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closePostModal()">&times;</span>
+            <div id="postModalContent"></div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
