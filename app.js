@@ -1,7 +1,7 @@
-// Blog Application - ULTRA FIXED VERSION
-// Dodatkowe zabezpieczenia dla problemu z zapisywaniem wpisów
+// Blog Application - ULTRA FIXED + PERSISTENT STORAGE VERSION
+// Dodane trwałe przechowywanie danych w localStorage
 
-console.log('🎯 ULTRA FIXED VERSION - Loading blog application...');
+console.log('🎯 ULTRA FIXED + PERSISTENT STORAGE - Loading blog application...');
 
 class BlogApp {
   constructor() {
@@ -12,19 +12,25 @@ class BlogApp {
     this.currentDeleteId = null;
     this.postIdCounter = 1;
     this.commentIdCounter = 1;
-    this.debugMode = true; // Włącz tryb debug
+    this.debugMode = true;
 
     // Admin authentication system
     this.admin = {
       login: "admin",
-      password: "admin123",
+      password: "admin123", 
       email: "admin@blog.pl",
       isLoggedIn: false
     };
 
-    console.log('💾 Admin config:', this.admin);
+    // Storage keys
+    this.STORAGE_KEYS = {
+      POSTS: 'passionhub_posts',
+      ADMIN: 'passionhub_admin',
+      COUNTERS: 'passionhub_counters'
+    };
 
-    // Bezpieczna inicjalizacja
+    console.log('💾 Persistent storage enabled with localStorage');
+
     this.initWithRetry();
   }
 
@@ -47,26 +53,30 @@ class BlogApp {
     try {
       console.log('🚀 Starting safe initialization...');
 
-      this.initializeData();
+      // Najpierw załaduj dane z localStorage
+      this.loadFromStorage();
+
+      // Jeśli nie ma danych, użyj przykładowych
+      if (this.posts.length === 0) {
+        this.initializeDefaultData();
+      }
+
       this.initializeEventListeners();
       this.renderPosts();
       this.renderRecentPosts();
       this.updateAdminUI();
       this.updateStats();
 
-      // Dodaj dodatkowy event listener po 1 sekundzie dla pewności
+      // Dodaj dodatkowy event listener po 1 sekundzie
       setTimeout(() => {
         this.reinforceEventListeners();
       }, 1000);
 
       console.log('🎉 Blog application initialized successfully!');
-
-      // Wyświetl diagnostykę
       this.runDiagnostics();
 
     } catch (error) {
       console.error('❌ Error during initialization:', error);
-      // Spróbuj ponownie za 2 sekundy
       setTimeout(() => {
         console.log('🔄 Retrying initialization...');
         this.safeInit();
@@ -74,60 +84,100 @@ class BlogApp {
     }
   }
 
-  runDiagnostics() {
-    console.log('🔍 DIAGNOSTYKA:');
-    console.log('📊 Posts loaded:', this.posts.length);
-    console.log('🔐 Admin logged in:', this.admin.isLoggedIn);
-    console.log('🆔 Next post ID:', this.postIdCounter);
+  // ===== PERSISTENT STORAGE METHODS =====
 
-    // Sprawdź kluczowe elementy DOM
-    const elements = {
-      'loginBtn': document.getElementById('loginBtn'),
-      'addPostBtn': document.getElementById('addPostBtn'),
-      'postForm': document.getElementById('postForm'),
-      'postsContainer': document.getElementById('postsContainer')
-    };
+  saveToStorage() {
+    try {
+      console.log('💾 Saving data to localStorage...');
 
-    for (const [name, element] of Object.entries(elements)) {
-      if (element) {
-        console.log(`✅ ${name} found`);
-      } else {
-        console.warn(`⚠️ ${name} NOT found`);
+      // Zapisz posty
+      localStorage.setItem(this.STORAGE_KEYS.POSTS, JSON.stringify(this.posts));
+
+      // Zapisz ustawienia admina (bez hasła w localStorage dla bezpieczeństwa)
+      const adminToSave = {
+        login: this.admin.login,
+        email: this.admin.email
+        // hasło nie jest zapisywane do localStorage
+      };
+      localStorage.setItem(this.STORAGE_KEYS.ADMIN, JSON.stringify(adminToSave));
+
+      // Zapisz liczniki
+      const counters = {
+        postIdCounter: this.postIdCounter,
+        commentIdCounter: this.commentIdCounter
+      };
+      localStorage.setItem(this.STORAGE_KEYS.COUNTERS, JSON.stringify(counters));
+
+      console.log('✅ Data saved to localStorage');
+      console.log(`📊 Saved ${this.posts.length} posts`);
+
+    } catch (error) {
+      console.error('❌ Error saving to localStorage:', error);
+      this.showToast('⚠️ Błąd zapisywania danych', 'error');
+    }
+  }
+
+  loadFromStorage() {
+    try {
+      console.log('📂 Loading data from localStorage...');
+
+      // Załaduj posty
+      const savedPosts = localStorage.getItem(this.STORAGE_KEYS.POSTS);
+      if (savedPosts) {
+        this.posts = JSON.parse(savedPosts);
+        console.log(`📄 Loaded ${this.posts.length} posts from storage`);
       }
+
+      // Załaduj ustawienia admina
+      const savedAdmin = localStorage.getItem(this.STORAGE_KEYS.ADMIN);
+      if (savedAdmin) {
+        const adminData = JSON.parse(savedAdmin);
+        this.admin.login = adminData.login || this.admin.login;
+        this.admin.email = adminData.email || this.admin.email;
+        console.log('👤 Loaded admin settings from storage');
+      }
+
+      // Załaduj liczniki
+      const savedCounters = localStorage.getItem(this.STORAGE_KEYS.COUNTERS);
+      if (savedCounters) {
+        const counters = JSON.parse(savedCounters);
+        this.postIdCounter = counters.postIdCounter || this.postIdCounter;
+        this.commentIdCounter = counters.commentIdCounter || this.commentIdCounter;
+        console.log('🔢 Loaded counters from storage');
+      }
+
+      // Ustaw liczniki na podstawie istniejących danych jeśli nie ma zapisanych
+      if (this.posts.length > 0) {
+        const maxPostId = Math.max(...this.posts.map(p => p.id));
+        const maxCommentId = Math.max(...this.posts.flatMap(p => p.comments.map(c => c.id)));
+        this.postIdCounter = Math.max(this.postIdCounter, maxPostId + 1);
+        this.commentIdCounter = Math.max(this.commentIdCounter, maxCommentId + 1);
+      }
+
+      console.log('✅ Data loaded from localStorage');
+
+    } catch (error) {
+      console.error('❌ Error loading from localStorage:', error);
+      console.log('📝 Will use default data instead');
     }
   }
 
-  reinforceEventListeners() {
-    console.log('🔧 Reinforcing event listeners...');
-
-    // Dodatkowy listener dla przycisku dodawania postów
-    const addPostBtn = document.getElementById('addPostBtn');
-    if (addPostBtn) {
-      // Usuń stary listener (gdyby był)
-      addPostBtn.removeEventListener('click', this.handleAddPostClick);
-
-      // Dodaj nowy listener
-      this.handleAddPostClick = (e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        console.log('🎯 ADD POST CLICKED via reinforced listener');
-        this.showAddPostModal();
-      };
-
-      addPostBtn.addEventListener('click', this.handleAddPostClick);
-      console.log('✅ Add post button reinforced');
-
-      // Dodaj onclick jako backup
-      addPostBtn.onclick = (e) => {
-        e.preventDefault();
-        console.log('🎯 ADD POST CLICKED via onclick backup');
-        this.showAddPostModal();
-      };
+  clearStorage() {
+    try {
+      console.log('🗑️ Clearing localStorage...');
+      localStorage.removeItem(this.STORAGE_KEYS.POSTS);
+      localStorage.removeItem(this.STORAGE_KEYS.ADMIN);
+      localStorage.removeItem(this.STORAGE_KEYS.COUNTERS);
+      console.log('✅ localStorage cleared');
+    } catch (error) {
+      console.error('❌ Error clearing localStorage:', error);
     }
   }
 
-  initializeData() {
-    console.log('📄 Loading sample data...');
+  // ===== INITIALIZATION METHODS =====
+
+  initializeDefaultData() {
+    console.log('📄 Loading default sample data...');
 
     this.posts = [
       {
@@ -179,39 +229,87 @@ class BlogApp {
       }
     ];
 
-    // Ustaw liczniki
-    this.postIdCounter = Math.max(...this.posts.map(p => p.id)) + 1;
-    this.commentIdCounter = Math.max(
-      ...this.posts.flatMap(p => p.comments.map(c => c.id))
-    ) + 1;
+    this.postIdCounter = 4;
+    this.commentIdCounter = 4;
 
-    console.log('✅ Sample data loaded:', this.posts.length, 'posts');
-    console.log('🆔 Next post ID will be:', this.postIdCounter);
+    console.log('✅ Default data loaded:', this.posts.length, 'posts');
+
+    // Zapisz domyślne dane do localStorage
+    this.saveToStorage();
   }
 
+  runDiagnostics() {
+    console.log('🔍 DIAGNOSTYKA:');
+    console.log('📊 Posts loaded:', this.posts.length);
+    console.log('🔐 Admin logged in:', this.admin.isLoggedIn);
+    console.log('🆔 Next post ID:', this.postIdCounter);
+    console.log('💾 Storage check:');
+
+    // Sprawdź localStorage
+    try {
+      const postsInStorage = localStorage.getItem(this.STORAGE_KEYS.POSTS);
+      console.log('📂 Posts in localStorage:', postsInStorage ? JSON.parse(postsInStorage).length : 0);
+    } catch (e) {
+      console.log('❌ localStorage error:', e.message);
+    }
+
+    // Sprawdź DOM
+    const elements = {
+      'loginBtn': document.getElementById('loginBtn'),
+      'addPostBtn': document.getElementById('addPostBtn'),
+      'postForm': document.getElementById('postForm'),
+      'postsContainer': document.getElementById('postsContainer')
+    };
+
+    for (const [name, element] of Object.entries(elements)) {
+      if (element) {
+        console.log(`✅ ${name} found`);
+      } else {
+        console.warn(`⚠️ ${name} NOT found`);
+      }
+    }
+  }
+
+  // Event listeners setup (unchanged from previous version)
   initializeEventListeners() {
     console.log('🔗 Setting up event listeners...');
 
     try {
-      // Login/Logout handlers
       this.setupAuthHandlers();
-
-      // Admin settings
       this.setupAdminHandlers();
-
-      // Post management
       this.setupPostHandlers();
-
-      // Delete confirmation
       this.setupDeleteHandlers();
-
-      // ESC key
       this.setupKeyboardHandlers();
 
       console.log('✅ All event listeners set up');
 
     } catch (error) {
       console.error('❌ Error setting up event listeners:', error);
+    }
+  }
+
+  reinforceEventListeners() {
+    console.log('🔧 Reinforcing event listeners...');
+
+    const addPostBtn = document.getElementById('addPostBtn');
+    if (addPostBtn) {
+      addPostBtn.removeEventListener('click', this.handleAddPostClick);
+
+      this.handleAddPostClick = (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('🎯 ADD POST CLICKED via reinforced listener');
+        this.showAddPostModal();
+      };
+
+      addPostBtn.addEventListener('click', this.handleAddPostClick);
+      console.log('✅ Add post button reinforced');
+
+      addPostBtn.onclick = (e) => {
+        e.preventDefault();
+        console.log('🎯 ADD POST CLICKED via onclick backup');
+        this.showAddPostModal();
+      };
     }
   }
 
@@ -235,14 +333,12 @@ class BlogApp {
       console.log('✅ Logout button handler set');
     }
 
-    // Login form
     const loginForm = document.getElementById('loginForm');
     if (loginForm) {
       loginForm.addEventListener('submit', (e) => this.handleLogin(e));
       console.log('✅ Login form handler set');
     }
 
-    // Login modal close handlers
     ['loginClose', 'loginCancel'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.addEventListener('click', () => this.hideLoginModal());
@@ -263,12 +359,10 @@ class BlogApp {
   }
 
   setupPostHandlers() {
-    // GŁÓWNY HANDLER dla dodawania postów - WZMOCNIONY
     const addPostBtn = document.getElementById('addPostBtn');
     if (addPostBtn) {
       console.log('🎯 Found add post button, setting up handlers...');
 
-      // Handler 1: addEventListener
       addPostBtn.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
@@ -276,7 +370,6 @@ class BlogApp {
         this.showAddPostModal();
       });
 
-      // Handler 2: onclick jako backup
       addPostBtn.onclick = (e) => {
         e.preventDefault();
         console.log('🎯 ADD POST CLICKED (onclick backup)');
@@ -288,7 +381,6 @@ class BlogApp {
       console.warn('⚠️ Add post button not found');
     }
 
-    // Post form
     const postForm = document.getElementById('postForm');
     if (postForm) {
       postForm.addEventListener('submit', (e) => {
@@ -298,7 +390,6 @@ class BlogApp {
       console.log('✅ Post form handler set');
     }
 
-    // Post modal close handlers
     ['modalClose', 'postCancel'].forEach(id => {
       const el = document.getElementById(id);
       if (el) el.addEventListener('click', () => {
@@ -343,7 +434,7 @@ class BlogApp {
     });
   }
 
-  // Authentication methods
+  // Authentication methods (unchanged)
   showLoginModal() {
     console.log('📝 Showing login modal');
     const loginModal = document.getElementById('loginModal');
@@ -379,7 +470,6 @@ class BlogApp {
       this.showToast('🎉 Pomyślnie zalogowano!', 'success');
       console.log('✅ Login successful');
 
-      // Ponownie ustaw event listenery po zalogowaniu
       setTimeout(() => {
         this.reinforceEventListeners();
       }, 500);
@@ -408,25 +498,21 @@ class BlogApp {
     };
 
     if (this.admin.isLoggedIn) {
-      // Show admin elements
       if (elements.loginBtn) elements.loginBtn.classList.add('hidden');
       if (elements.adminStatus) elements.adminStatus.classList.remove('hidden');
       if (elements.adminPanel) elements.adminPanel.classList.remove('hidden');
       if (elements.adminActions) elements.adminActions.classList.remove('hidden');
       document.body.classList.add('admin-logged-in');
 
-      // Update admin settings form
       this.updateAdminSettingsForm();
       console.log('👑 Admin UI enabled');
 
-      // Upewnij się, że przycisk dodawania jest widoczny
       const addPostBtn = document.getElementById('addPostBtn');
       if (addPostBtn) {
         console.log('✅ Add post button should now be visible');
       }
 
     } else {
-      // Hide admin elements
       if (elements.loginBtn) elements.loginBtn.classList.remove('hidden');
       if (elements.adminStatus) elements.adminStatus.classList.add('hidden');
       if (elements.adminPanel) elements.adminPanel.classList.add('hidden');
@@ -435,7 +521,6 @@ class BlogApp {
       console.log('👤 Admin UI disabled');
     }
 
-    // Re-render posts to show/hide admin buttons
     this.renderPosts();
   }
 
@@ -468,11 +553,14 @@ class BlogApp {
     this.admin.password = newPassword;
     this.admin.email = newEmail;
 
+    // Zapisz nowe ustawienia do localStorage
+    this.saveToStorage();
+
     this.showToast('✅ Ustawienia zostały zapisane!', 'success');
     console.log('✅ Admin settings saved:', this.admin);
   }
 
-  // Post management - SUPER WZMOCNIONE
+  // Post management - UPDATED WITH PERSISTENT STORAGE
   showAddPostModal() {
     console.log('🎯 SHOW ADD POST MODAL called');
     console.log('🔐 Admin logged in:', this.admin.isLoggedIn);
@@ -542,17 +630,17 @@ class BlogApp {
       return;
     }
 
-    // Pobierz dane z formularza
     const formData = this.getFormData();
     if (!formData) return;
 
     console.log('📝 Form data:', formData);
 
-    // Zapisz post
     const success = this.savePost(formData);
     if (!success) return;
 
-    // Odśwież interfejs
+    // KLUCZOWE: Zapisz do localStorage po każdej zmianie
+    this.saveToStorage();
+
     this.refreshUI();
 
     console.log('🎉 Post submit completed successfully');
@@ -588,7 +676,6 @@ class BlogApp {
       const now = new Date().toISOString().split('T')[0];
 
       if (this.currentEditId) {
-        // Edit existing post
         console.log('✏️ Editing post:', this.currentEditId);
         const postIndex = this.posts.findIndex(p => p.id === this.currentEditId);
 
@@ -609,7 +696,6 @@ class BlogApp {
         console.log('✅ Post updated successfully:', this.posts[postIndex]);
 
       } else {
-        // Add new post
         console.log('➕ Adding new post');
         const newPost = {
           id: this.postIdCounter++,
@@ -620,10 +706,9 @@ class BlogApp {
           comments: []
         };
 
-        // Dodaj na początek listy
         this.posts.unshift(newPost);
 
-        this.showToast('🎉 Nowy wpis został dodany!', 'success');
+        this.showToast('🎉 Nowy wpis został dodany i zapisany!', 'success');
         console.log('✅ New post added successfully:', newPost);
         console.log('📊 Total posts now:', this.posts.length);
       }
@@ -651,7 +736,93 @@ class BlogApp {
     }
   }
 
-  // Rendering methods
+  showEditPostModal(postId) {
+    console.log('✏️ Showing edit post modal for post:', postId);
+
+    if (!this.admin.isLoggedIn) {
+      this.showToast('🔐 Musisz być zalogowany jako administrator!', 'error');
+      return;
+    }
+
+    const post = this.posts.find(p => p.id === postId);
+    if (!post) {
+      console.log('❌ Post not found:', postId);
+      return;
+    }
+
+    this.currentEditId = postId;
+
+    const elements = {
+      modalTitle: document.getElementById('modalTitle'),
+      postTitle: document.getElementById('postTitle'),
+      postImage: document.getElementById('postImage'),
+      postContent: document.getElementById('postContent'),
+      postModal: document.getElementById('postModal')
+    };
+
+    if (elements.modalTitle) elements.modalTitle.textContent = '✏️ Edytuj wpis';
+    if (elements.postTitle) elements.postTitle.value = post.title;
+    if (elements.postImage) elements.postImage.value = post.imageUrl || '';
+    if (elements.postContent) elements.postContent.value = post.content;
+    if (elements.postModal) elements.postModal.classList.remove('hidden');
+    if (elements.postTitle) elements.postTitle.focus();
+
+    console.log('✅ Edit modal shown for post:', post.title);
+  }
+
+  showDeleteModal(postId) {
+    console.log('🗑️ Showing delete modal for post:', postId);
+
+    if (!this.admin.isLoggedIn) {
+      this.showToast('❌ Brak uprawnień!', 'error');
+      return;
+    }
+
+    this.currentDeleteId = postId;
+    const deleteModal = document.getElementById('deleteModal');
+    if (deleteModal) {
+      deleteModal.classList.remove('hidden');
+    }
+  }
+
+  hideDeleteModal() {
+    console.log('❌ Hiding delete modal');
+    const deleteModal = document.getElementById('deleteModal');
+    if (deleteModal) {
+      deleteModal.classList.add('hidden');
+    }
+    this.currentDeleteId = null;
+  }
+
+  confirmDelete() {
+    console.log('🗑️ Confirming delete for post:', this.currentDeleteId);
+
+    if (!this.currentDeleteId || !this.admin.isLoggedIn) return;
+
+    const postIndex = this.posts.findIndex(p => p.id === this.currentDeleteId);
+    if (postIndex !== -1) {
+      const deletedPost = this.posts[postIndex];
+      this.posts.splice(postIndex, 1);
+
+      // KLUCZOWE: Zapisz po usunięciu
+      this.saveToStorage();
+
+      this.hideDeleteModal();
+      this.renderPosts();
+      this.renderRecentPosts();
+      this.updateStats();
+      this.showToast('🗑️ Wpis został usunięty i zmiany zapisane!', 'success');
+      console.log('✅ Post deleted:', deletedPost.title);
+    }
+  }
+
+  hideAllModals() {
+    this.hideLoginModal();
+    this.hidePostModal();
+    this.hideDeleteModal();
+  }
+
+  // Rendering methods (mostly unchanged)
   renderPosts() {
     console.log('🎨 Rendering', this.posts.length, 'posts...');
 
@@ -667,6 +838,9 @@ class BlogApp {
           <h2>📝 Brak wpisów</h2>
           <p>Nie ma jeszcze żadnych wpisów na blogu.</p>
           ${this.admin.isLoggedIn ? '<p><strong>Jako administrator możesz dodać pierwszy wpis!</strong></p>' : ''}
+          <div style="margin-top: 20px; padding: 15px; background: #fef3c7; border-radius: 8px; border: 2px solid #fbbf24;">
+            <p><strong>💡 Informacja:</strong> Twoje wpisy są zapisywane w przeglądarce i będą dostępne po odświeżeniu strony.</p>
+          </div>
         </div>
       `;
       console.log('✅ Empty state rendered');
@@ -703,6 +877,12 @@ class BlogApp {
            onerror="this.style.display='none'; console.log('Image failed to load:', this.src);">
     ` : '';
 
+    const persistenceIndicator = `
+      <div style="margin-top: 10px; font-size: 0.75rem; color: #6b7280; display: flex; align-items: center; gap: 5px;">
+        💾 <span>Wpis zapisany lokalnie</span>
+      </div>
+    `;
+
     return `
       <article class="post" id="post-${post.id}">
         <header class="post__header">
@@ -712,6 +892,7 @@ class BlogApp {
               <span>📅 ${this.formatDate(post.date)}</span>
               <span>💬 ${post.comments.length} komentarzy</span>
             </div>
+            ${persistenceIndicator}
           </div>
           ${adminActions}
         </header>
@@ -791,7 +972,6 @@ class BlogApp {
   attachPostEventListeners() {
     console.log('🔗 Attaching post event listeners...');
 
-    // Edit post buttons
     document.querySelectorAll('.edit-post-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -801,7 +981,6 @@ class BlogApp {
       });
     });
 
-    // Delete post buttons
     document.querySelectorAll('.delete-post-btn').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
@@ -811,7 +990,6 @@ class BlogApp {
       });
     });
 
-    // Comment forms
     document.querySelectorAll('.comment-form-inner').forEach(form => {
       form.addEventListener('submit', (e) => {
         e.preventDefault();
@@ -822,88 +1000,6 @@ class BlogApp {
     });
 
     console.log('✅ Post event listeners attached');
-  }
-
-  showEditPostModal(postId) {
-    console.log('✏️ Showing edit post modal for post:', postId);
-
-    if (!this.admin.isLoggedIn) {
-      this.showToast('🔐 Musisz być zalogowany jako administrator!', 'error');
-      return;
-    }
-
-    const post = this.posts.find(p => p.id === postId);
-    if (!post) {
-      console.log('❌ Post not found:', postId);
-      return;
-    }
-
-    this.currentEditId = postId;
-
-    const elements = {
-      modalTitle: document.getElementById('modalTitle'),
-      postTitle: document.getElementById('postTitle'),
-      postImage: document.getElementById('postImage'),
-      postContent: document.getElementById('postContent'),
-      postModal: document.getElementById('postModal')
-    };
-
-    if (elements.modalTitle) elements.modalTitle.textContent = '✏️ Edytuj wpis';
-    if (elements.postTitle) elements.postTitle.value = post.title;
-    if (elements.postImage) elements.postImage.value = post.imageUrl || '';
-    if (elements.postContent) elements.postContent.value = post.content;
-    if (elements.postModal) elements.postModal.classList.remove('hidden');
-    if (elements.postTitle) elements.postTitle.focus();
-
-    console.log('✅ Edit modal shown for post:', post.title);
-  }
-
-  showDeleteModal(postId) {
-    console.log('🗑️ Showing delete modal for post:', postId);
-
-    if (!this.admin.isLoggedIn) {
-      this.showToast('❌ Brak uprawnień!', 'error');
-      return;
-    }
-
-    this.currentDeleteId = postId;
-    const deleteModal = document.getElementById('deleteModal');
-    if (deleteModal) {
-      deleteModal.classList.remove('hidden');
-    }
-  }
-
-  hideDeleteModal() {
-    console.log('❌ Hiding delete modal');
-    const deleteModal = document.getElementById('deleteModal');
-    if (deleteModal) {
-      deleteModal.classList.add('hidden');
-    }
-    this.currentDeleteId = null;
-  }
-
-  confirmDelete() {
-    console.log('🗑️ Confirming delete for post:', this.currentDeleteId);
-
-    if (!this.currentDeleteId || !this.admin.isLoggedIn) return;
-
-    const postIndex = this.posts.findIndex(p => p.id === this.currentDeleteId);
-    if (postIndex !== -1) {
-      const deletedPost = this.posts[postIndex];
-      this.posts.splice(postIndex, 1);
-      this.hideDeleteModal();
-      this.renderPosts();
-      this.renderRecentPosts();
-      this.updateStats();
-      this.showToast('🗑️ Wpis został usunięty!', 'success');
-      console.log('✅ Post deleted:', deletedPost.title);
-    }
-  }
-
-  hideAllModals() {
-    this.hideLoginModal();
-    this.hidePostModal();
-    this.hideDeleteModal();
   }
 
   handleCommentSubmit(e, postId) {
@@ -939,10 +1035,13 @@ class BlogApp {
     post.comments.push(newComment);
     form.reset();
 
+    // KLUCZOWE: Zapisz po dodaniu komentarza
+    this.saveToStorage();
+
     this.renderPosts();
     this.updateStats();
     this.simulateEmailNotification(newComment, post);
-    this.showToast('✅ Komentarz został dodany!', 'success');
+    this.showToast('✅ Komentarz został dodany i zapisany!', 'success');
     console.log('✅ Comment added successfully:', newComment.authorName);
   }
 
@@ -973,7 +1072,7 @@ class BlogApp {
     }
   }
 
-  // Utility methods
+  // Utility methods (unchanged)
   escapeHtml(unsafe) {
     return unsafe
       .replace(/&/g, "&amp;")
@@ -998,7 +1097,6 @@ class BlogApp {
     const container = document.getElementById('toastContainer');
     if (!container) {
       console.warn('⚠️ Toast container not found');
-      // Alternatywnie wyświetl alert
       alert(message);
       return;
     }
@@ -1018,14 +1116,64 @@ class BlogApp {
           toast.parentNode.removeChild(toast);
         }
       }, 300);
-    }, 4000);
+    }, 5000); // Zwiększony czas wyświetlania do 5 sekund
+  }
+
+  // ===== DEBUGGING AND ADMIN UTILITIES =====
+
+  // Metody pomocnicze dla debugowania (dostępne z konsoli)
+  debugInfo() {
+    console.log('🔍 DEBUG INFO:');
+    console.log('📊 Posts:', this.posts.length);
+    console.log('🔐 Admin logged in:', this.admin.isLoggedIn);
+    console.log('💾 LocalStorage data:', {
+      posts: localStorage.getItem(this.STORAGE_KEYS.POSTS) ? JSON.parse(localStorage.getItem(this.STORAGE_KEYS.POSTS)).length : 0,
+      admin: !!localStorage.getItem(this.STORAGE_KEYS.ADMIN),
+      counters: !!localStorage.getItem(this.STORAGE_KEYS.COUNTERS)
+    });
+    return this;
+  }
+
+  clearAllData() {
+    if (confirm('Czy na pewno chcesz usunąć wszystkie dane? Ta operacja jest nieodwracalna!')) {
+      this.posts = [];
+      this.postIdCounter = 1;
+      this.commentIdCounter = 1;
+      this.clearStorage();
+      this.renderPosts();
+      this.renderRecentPosts();
+      this.updateStats();
+      this.showToast('🗑️ Wszystkie dane zostały usunięte!', 'info');
+      console.log('🗑️ All data cleared');
+    }
+    return this;
+  }
+
+  exportData() {
+    const data = {
+      posts: this.posts,
+      admin: { login: this.admin.login, email: this.admin.email },
+      counters: { postIdCounter: this.postIdCounter, commentIdCounter: this.commentIdCounter },
+      exportDate: new Date().toISOString()
+    };
+
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `passion-hub-backup-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    this.showToast('📥 Backup został pobrany!', 'success');
+    console.log('📥 Data exported');
+    return this;
   }
 }
 
-// ULTRA bezpieczna inicjalizacja
-console.log('🎯 Starting ULTRA FIXED blog application...');
+// Inicjalizacja z dodatkowymi zabezpieczeniami
+console.log('🎯 Starting ULTRA FIXED + PERSISTENT STORAGE blog application...');
 
-// Multiple initialization attempts
 let blogApp;
 
 function initBlogApp() {
@@ -1034,14 +1182,22 @@ function initBlogApp() {
     blogApp = new BlogApp();
     window.BlogApp = BlogApp;
     window.blogApp = blogApp;
+
+    // Udostępnij metody debugowania w konsoli
+    window.debugBlog = () => blogApp.debugInfo();
+    window.clearBlogData = () => blogApp.clearAllData();
+    window.exportBlogData = () => blogApp.exportData();
+
     console.log('🎉 Blog app initialized successfully!');
+    console.log('💡 Debug commands: debugBlog(), clearBlogData(), exportBlogData()');
+
   } catch (error) {
     console.error('❌ Failed to initialize blog app:', error);
     setTimeout(initBlogApp, 2000);
   }
 }
 
-// Try immediate initialization
+// Wielokrotne próby inicjalizacji
 if (document.readyState === 'complete' || document.readyState === 'interactive') {
   console.log('📱 DOM ready, initializing immediately');
   initBlogApp();
@@ -1049,7 +1205,6 @@ if (document.readyState === 'complete' || document.readyState === 'interactive')
   console.log('⏳ Waiting for DOM to be ready');
   document.addEventListener('DOMContentLoaded', initBlogApp);
 
-  // Backup initialization after 3 seconds
   setTimeout(() => {
     if (!window.blogApp) {
       console.log('🔄 Backup initialization after 3s');
@@ -1058,4 +1213,4 @@ if (document.readyState === 'complete' || document.readyState === 'interactive')
   }, 3000);
 }
 
-console.log('✅ ULTRA FIXED blog script loaded!');
+console.log('✅ ULTRA FIXED + PERSISTENT STORAGE blog script loaded!');

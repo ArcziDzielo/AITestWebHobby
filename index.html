@@ -11,7 +11,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
-    <!-- Header with cute dogs background -->
     <header class="header">
         <div class="container">
             <div class="header__content">
@@ -20,9 +19,7 @@
                     <p class="header__subtitle">Odkryj radość tworzenia własnymi rękami</p>
                 </div>
                 <div class="header__auth">
-                    <button class="btn btn--primary" id="loginBtn">
-                        🔐 Zaloguj jako Administrator
-                    </button>
+                    <button class="btn btn--primary" id="loginBtn">🔐 Zaloguj jako Administrator</button>
                     <div class="admin-status hidden" id="adminStatus">
                         <span class="admin-welcome">Witaj, Admin! 👋</span>
                         <button class="btn btn--secondary" id="logoutBtn">Wyloguj</button>
@@ -32,7 +29,6 @@
         </div>
     </header>
 
-    <!-- Admin Panel (tylko dla zalogowanego admina) -->
     <div class="admin-panel hidden" id="adminPanel">
         <div class="container">
             <div class="admin-panel__content">
@@ -74,38 +70,27 @@
         </div>
     </div>
 
-    <!-- Main Content -->
     <main class="main-content">
         <div class="container">
             <div class="content-grid">
-                <!-- Sidebar -->
                 <aside class="sidebar">
                     <div class="sidebar__section">
                         <h3>📝 Ostatnie wpisy</h3>
-                        <div class="recent-posts" id="recentPosts">
-                            <!-- Recent posts will be inserted here -->
-                        </div>
+                        <div class="recent-posts" id="recentPosts"></div>
                     </div>
-                    <!-- Admin Actions (tylko dla zalogowanego admina) -->
                     <div class="sidebar__section admin-only hidden" id="adminActions">
                         <h3>⚙️ Zarządzanie</h3>
-                        <button class="btn btn--admin btn--full" id="addPostBtn">
-                            ➕ Dodaj nowy wpis
-                        </button>
+                        <button class="btn btn--admin btn--full" id="addPostBtn">➕ Dodaj nowy wpis</button>
                     </div>
                 </aside>
 
-                <!-- Posts Area -->
                 <div class="posts-area">
-                    <div class="posts-container" id="postsContainer">
-                        <!-- Posts will be inserted here -->
-                    </div>
+                    <div class="posts-container" id="postsContainer"></div>
                 </div>
             </div>
         </div>
     </main>
 
-    <!-- Login Modal -->
     <div class="modal hidden" id="loginModal">
         <div class="modal__overlay" id="loginOverlay"></div>
         <div class="modal__content">
@@ -130,7 +115,6 @@
         </div>
     </div>
 
-    <!-- Add/Edit Post Modal -->
     <div class="modal hidden" id="postModal">
         <div class="modal__overlay" id="modalOverlay"></div>
         <div class="modal__content modal--large">
@@ -159,7 +143,6 @@
         </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
     <div class="modal hidden" id="deleteModal">
         <div class="modal__overlay" id="deleteOverlay"></div>
         <div class="modal__content">
@@ -177,9 +160,7 @@
         </div>
     </div>
 
-    <!-- Toast Container -->
     <div class="toast-container" id="toastContainer"></div>
-
     <script src="app.js"></script>
 </body>
 </html>
