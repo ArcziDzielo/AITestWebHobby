@@ -3,14 +3,53 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Passion Hub - Blog o Hobby</title>
-    <link rel="stylesheet" href="style.css">
-    <meta name="description" content="Blog o hobby, majsterkowaniu i DIY. Odkryj radość tworzenia własnymi rękami.">
+    <title>Passion Hub - Profesjonalny Blog o Hobby</title>
+    <meta name="description" content="Profesjonalny blog o hobby, majsterkowaniu i DIY. Odkryj radość tworzenia własnymi rękami. Wpisy synchronizowane między użytkownikami.">
+    <meta name="keywords" content="hobby, DIY, majsterkowanie, blog, rękodzieło, twórczość">
+    <meta name="author" content="Passion Hub">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://1lo.hobby/">
+    <meta property="og:title" content="Passion Hub - Profesjonalny Blog o Hobby">
+    <meta property="og:description" content="Odkryj radość tworzenia własnymi rękami">
+    <meta property="og:image" content="https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=1200&h=630&fit=crop">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://1lo.hobby/">
+    <meta property="twitter:title" content="Passion Hub - Profesjonalny Blog o Hobby">
+    <meta property="twitter:description" content="Odkryj radość tworzenia własnymi rękami">
+    <meta property="twitter:image" content="https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=1200&h=630&fit=crop">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐕</text></svg>">
+
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Styles -->
+    <link rel="stylesheet" href="style-professional.css">
+
+    <!-- Schema.org markup -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Blog",
+      "name": "Passion Hub - Blog o Hobby",
+      "description": "Profesjonalny blog o hobby, majsterkowaniu i DIY",
+      "url": "https://1lo.hobby/",
+      "author": {
+        "@type": "Person",
+        "name": "Admin"
+      }
+    }
+    </script>
 </head>
 <body>
+    <!-- Professional Header -->
     <header class="header">
         <div class="container">
             <div class="header__content">
@@ -19,16 +58,21 @@
                     <p class="header__subtitle">Odkryj radość tworzenia własnymi rękami</p>
                 </div>
                 <div class="header__auth">
-                    <button class="btn btn--primary" id="loginBtn">🔐 Zaloguj jako Administrator</button>
+                    <button class="btn btn--primary btn--lg" id="loginBtn">
+                        🔐 Panel Administratora
+                    </button>
                     <div class="admin-status hidden" id="adminStatus">
                         <span class="admin-welcome">Witaj, Admin! 👋</span>
-                        <button class="btn btn--secondary" id="logoutBtn">Wyloguj</button>
+                        <button class="btn btn--secondary" id="logoutBtn">
+                            🚪 Wyloguj
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </header>
 
+    <!-- Enhanced Admin Panel -->
     <div class="admin-panel hidden" id="adminPanel">
         <div class="container">
             <div class="admin-panel__content">
@@ -39,21 +83,29 @@
                         <form class="admin-settings-form" id="adminSettingsForm">
                             <div class="form-group">
                                 <label for="adminLogin" class="form-label">Login administratora</label>
-                                <input type="text" id="adminLogin" class="form-control" required>
+                                <input type="text" id="adminLogin" class="form-control" required readonly value="admin">
+                                <small style="color: #6b7280; font-size: 0.875rem; margin-top: 0.5rem; display: block;">
+                                    Login można zmienić tylko w pliku api.php na serwerze
+                                </small>
                             </div>
                             <div class="form-group">
                                 <label for="adminPassword" class="form-label">Hasło administratora</label>
-                                <input type="password" id="adminPassword" class="form-control" required>
+                                <input type="password" id="adminPassword" class="form-control" required readonly value="admin123">
+                                <small style="color: #6b7280; font-size: 0.875rem; margin-top: 0.5rem; display: block;">
+                                    Hasło można zmienić tylko w pliku api.php na serwerze
+                                </small>
                             </div>
                             <div class="form-group">
                                 <label for="adminEmail" class="form-label">Email dla powiadomień</label>
-                                <input type="email" id="adminEmail" class="form-control" required>
+                                <input type="email" id="adminEmail" class="form-control" required readonly value="admin@blog.pl">
+                                <small style="color: #6b7280; font-size: 0.875rem; margin-top: 0.5rem; display: block;">
+                                    Email można zmienić tylko w pliku api.php na serwerze
+                                </small>
                             </div>
-                            <button type="submit" class="btn btn--admin">💾 Zapisz ustawienia</button>
                         </form>
                     </div>
                     <div class="admin-card">
-                        <h3>📊 Statystyki</h3>
+                        <h3>📊 Statystyki Live</h3>
                         <div class="stats-grid">
                             <div class="stat-item">
                                 <span class="stat-number" id="postsCount">0</span>
@@ -64,103 +116,223 @@
                                 <span class="stat-label">Komentarzy</span>
                             </div>
                         </div>
+                        <div style="margin-top: 1.5rem; padding: 1rem; background: linear-gradient(135deg, #ecfdf5, #d1fae5); border-radius: 0.5rem; border: 1px solid #10b981;">
+                            <p style="margin: 0; font-size: 0.875rem; color: #065f46;">
+                                <strong>🌐 Server-side Storage:</strong> Wszystkie dane są przechowywane na serwerze i synchronizowane między użytkownikami.
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
+    <!-- Main Content with Two-Column Layout -->
     <main class="main-content">
         <div class="container">
             <div class="content-grid">
+                <!-- Enhanced Sidebar -->
                 <aside class="sidebar">
                     <div class="sidebar__section">
                         <h3>📝 Ostatnie wpisy</h3>
-                        <div class="recent-posts" id="recentPosts"></div>
+                        <div class="recent-posts" id="recentPosts">
+                            <!-- Recent posts will be inserted here dynamically -->
+                        </div>
                     </div>
+
+                    <!-- Admin Actions (visible only for logged-in admin) -->
                     <div class="sidebar__section admin-only hidden" id="adminActions">
                         <h3>⚙️ Zarządzanie</h3>
-                        <button class="btn btn--admin btn--full" id="addPostBtn">➕ Dodaj nowy wpis</button>
+                        <button class="btn btn--admin btn--full btn--lg" id="addPostBtn">
+                            ➕ Dodaj nowy wpis
+                        </button>
+                        <div style="margin-top: 1rem; padding: 0.75rem; background: #fff3cd; border: 1px solid #ffc107; border-radius: 0.5rem;">
+                            <p style="margin: 0; font-size: 0.75rem; color: #856404;">
+                                💡 <strong>Tip:</strong> Wpisy będą widoczne dla wszystkich użytkowników w czasie rzeczywistym.
+                            </p>
+                        </div>
+                    </div>
+
+                    <!-- Navigation -->
+                    <div class="sidebar__section">
+                        <h3>🧭 Nawigacja</h3>
+                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                            <button class="btn btn--secondary btn--full btn--sm" onclick="window.scrollTo({top: 0, behavior: 'smooth'})">
+                                ⬆️ Na górę
+                            </button>
+                            <button class="btn btn--secondary btn--full btn--sm" onclick="window.location.reload()">
+                                🔄 Odśwież stronę
+                            </button>
+                        </div>
                     </div>
                 </aside>
 
+                <!-- Two-Column Posts Area -->
                 <div class="posts-area">
-                    <div class="posts-container" id="postsContainer"></div>
+                    <div class="posts-container" id="postsContainer">
+                        <!-- Posts will be inserted here in two-column layout -->
+                        <!-- JavaScript will create: -->
+                        <!-- <div class="posts-grid"> -->
+                        <!--   <div class="posts-column posts-column--left">...</div> -->
+                        <!--   <div class="posts-column posts-column--right">...</div> -->
+                        <!-- </div> -->
+                    </div>
                 </div>
             </div>
         </div>
     </main>
 
+    <!-- Enhanced Login Modal -->
     <div class="modal hidden" id="loginModal">
         <div class="modal__overlay" id="loginOverlay"></div>
         <div class="modal__content">
             <div class="modal__header">
                 <h2>🔐 Logowanie Administratora</h2>
-                <button class="modal__close" id="loginClose">×</button>
+                <button class="modal__close" id="loginClose" aria-label="Zamknij modal">&times;</button>
             </div>
             <form class="modal__body" id="loginForm">
+                <div style="margin-bottom: 1.5rem; padding: 1rem; background: #dbeafe; border: 1px solid #3b82f6; border-radius: 0.5rem;">
+                    <p style="margin: 0; font-size: 0.875rem; color: #1e40af;">
+                        <strong>ℹ️ Domyślne dane logowania:</strong><br>
+                        Login: <code>admin</code><br>
+                        Hasło: <code>admin123</code>
+                    </p>
+                </div>
                 <div class="form-group">
                     <label for="loginUsername" class="form-label">Login</label>
-                    <input type="text" id="loginUsername" class="form-control" required>
+                    <input type="text" id="loginUsername" class="form-control" required autocomplete="username">
                 </div>
                 <div class="form-group">
                     <label for="loginPassword" class="form-label">Hasło</label>
-                    <input type="password" id="loginPassword" class="form-control" required>
+                    <input type="password" id="loginPassword" class="form-control" required autocomplete="current-password">
                 </div>
                 <div class="modal__footer">
-                    <button type="button" class="btn btn--secondary" id="loginCancel">Anuluj</button>
-                    <button type="submit" class="btn btn--primary">🚀 Zaloguj</button>
+                    <button type="button" class="btn btn--secondary" id="loginCancel">❌ Anuluj</button>
+                    <button type="submit" class="btn btn--primary">🚀 Zaloguj się</button>
                 </div>
             </form>
         </div>
     </div>
 
+    <!-- Enhanced Add/Edit Post Modal -->
     <div class="modal hidden" id="postModal">
         <div class="modal__overlay" id="modalOverlay"></div>
         <div class="modal__content modal--large">
             <div class="modal__header">
                 <h2 id="modalTitle">📝 Dodaj nowy wpis</h2>
-                <button class="modal__close" id="modalClose">×</button>
+                <button class="modal__close" id="modalClose" aria-label="Zamknij modal">&times;</button>
             </div>
             <form class="modal__body" id="postForm">
-                <div class="form-group">
-                    <label for="postTitle" class="form-label">Tytuł wpisu</label>
-                    <input type="text" id="postTitle" class="form-control" required>
+                <div style="margin-bottom: 1.5rem; padding: 1rem; background: #f0fdf4; border: 1px solid #10b981; border-radius: 0.5rem;">
+                    <p style="margin: 0; font-size: 0.875rem; color: #065f46;">
+                        <strong>🌐 Informacja:</strong> Wpis zostanie zapisany na serwerze i będzie dostępny dla wszystkich użytkowników.
+                    </p>
                 </div>
                 <div class="form-group">
-                    <label for="postImage" class="form-label">URL zdjęcia</label>
+                    <label for="postTitle" class="form-label">Tytuł wpisu *</label>
+                    <input type="text" id="postTitle" class="form-control" required placeholder="Wprowadź tytuł wpisu...">
+                </div>
+                <div class="form-group">
+                    <label for="postImage" class="form-label">URL zdjęcia (opcjonalne)</label>
                     <input type="url" id="postImage" class="form-control" placeholder="https://example.com/image.jpg">
+                    <small style="color: #6b7280; font-size: 0.875rem; margin-top: 0.5rem; display: block;">
+                        Możesz użyć darmowych zdjęć z Unsplash.com
+                    </small>
                 </div>
                 <div class="form-group">
-                    <label for="postContent" class="form-label">Treść wpisu</label>
-                    <textarea id="postContent" class="form-control" rows="8" required></textarea>
+                    <label for="postContent" class="form-label">Treść wpisu *</label>
+                    <textarea id="postContent" class="form-control" rows="10" required placeholder="Napisz treść swojego wpisu..."></textarea>
+                    <small style="color: #6b7280; font-size: 0.875rem; margin-top: 0.5rem; display: block;">
+                        Użyj \n\n aby oddzielić akapity
+                    </small>
                 </div>
                 <div class="modal__footer">
-                    <button type="button" class="btn btn--secondary" id="postCancel">Anuluj</button>
-                    <button type="submit" class="btn btn--primary">💾 Zapisz wpis</button>
+                    <button type="button" class="btn btn--secondary" id="postCancel">❌ Anuluj</button>
+                    <button type="submit" class="btn btn--primary btn--lg">💾 Zapisz wpis</button>
                 </div>
             </form>
         </div>
     </div>
 
+    <!-- Delete Confirmation Modal -->
     <div class="modal hidden" id="deleteModal">
         <div class="modal__overlay" id="deleteOverlay"></div>
         <div class="modal__content">
             <div class="modal__header">
                 <h2>🗑️ Potwierdzenie usunięcia</h2>
-                <button class="modal__close" id="deleteClose">×</button>
+                <button class="modal__close" id="deleteClose" aria-label="Zamknij modal">&times;</button>
             </div>
             <div class="modal__body">
-                <p>Czy na pewno chcesz usunąć ten wpis? Ta operacja jest nieodwracalna.</p>
+                <div style="margin-bottom: 1.5rem; padding: 1rem; background: #fef2f2; border: 1px solid #ef4444; border-radius: 0.5rem;">
+                    <p style="margin: 0; font-size: 0.875rem; color: #dc2626;">
+                        <strong>⚠️ Uwaga:</strong> Ta operacja jest nieodwracalna i wpis zostanie usunięty z serwera.
+                    </p>
+                </div>
+                <p>Czy na pewno chcesz usunąć ten wpis? Zostanie on trwale usunięty z serwera i nie będzie dostępny dla żadnego użytkownika.</p>
             </div>
             <div class="modal__footer">
-                <button type="button" class="btn btn--secondary" id="deleteCancel">Anuluj</button>
-                <button type="button" class="btn btn--danger" id="deleteConfirm">🗑️ Usuń wpis</button>
+                <button type="button" class="btn btn--secondary" id="deleteCancel">❌ Anuluj</button>
+                <button type="button" class="btn btn--danger btn--lg" id="deleteConfirm">🗑️ Usuń wpis</button>
             </div>
         </div>
     </div>
 
-    <div class="toast-container" id="toastContainer"></div>
-    <script src="app.js"></script>
+    <!-- Enhanced Toast Container -->
+    <div class="toast-container" id="toastContainer">
+        <!-- Toast notifications will be inserted here dynamically -->
+    </div>
+
+    <!-- Loading Indicator (hidden by default) -->
+    <div id="loadingIndicator" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999; background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); display: none;">
+        <div style="text-align: center;">
+            <div style="width: 40px; height: 40px; border: 4px solid #f3f4f6; border-top: 4px solid #f59e0b; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
+            <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">Ładowanie danych z serwera...</p>
+        </div>
+    </div>
+
+    <style>
+    @keyframes spin {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+    }
+    </style>
+
+    <!-- Professional JavaScript -->
+    <script src="app-professional.js"></script>
+
+    <!-- Service Worker Registration (for PWA capabilities) -->
+    <script>
+    // Register service worker for PWA capabilities (optional)
+    if ('serviceWorker' in navigator) {
+        window.addEventListener('load', function() {
+            // navigator.serviceWorker.register('/sw.js'); // Uncomment if you add a service worker
+        });
+    }
+
+    // Add loading indicator functions
+    window.showLoading = function() {
+        document.getElementById('loadingIndicator').style.display = 'block';
+    };
+
+    window.hideLoading = function() {
+        document.getElementById('loadingIndicator').style.display = 'none';
+    };
+
+    // Add global error handler
+    window.addEventListener('error', function(e) {
+        console.error('Global error:', e.error);
+        if (window.blogApp && window.blogApp.showToast) {
+            window.blogApp.showToast('❌ Wystąpił nieoczekiwany błąd', 'error');
+        }
+    });
+
+    // Add unhandled promise rejection handler
+    window.addEventListener('unhandledrejection', function(e) {
+        console.error('Unhandled promise rejection:', e.reason);
+        if (window.blogApp && window.blogApp.showToast) {
+            window.blogApp.showToast('❌ Wystąpił błąd połączenia', 'error');
+        }
+    });
+    </script>
 </body>
 </html>
