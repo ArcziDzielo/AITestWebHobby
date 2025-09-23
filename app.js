@@ -1,5 +1,5 @@
-// Professional Blog Application - FULL API VERSION
-console.log('🚀 Professional Blog Application - Full API Version Loading...');
+// Professional Blog Application - FIXED API CALLS
+console.log('🚀 Professional Blog Application - API Fixed Version Loading...');
 
 class ProfessionalBlogApp {
     constructor() {
@@ -10,7 +10,6 @@ class ProfessionalBlogApp {
         this.currentDeleteId = null;
         this.apiAvailable = false;
 
-        // Admin authentication system
         this.admin = {
             login: null,
             email: null,
@@ -18,16 +17,9 @@ class ProfessionalBlogApp {
             credentials: null
         };
 
-        // API Configuration - multiple fallbacks
-        this.API_ENDPOINTS = [
-            './api.php',
-            '/api.php',
-            '../api.php',
-            window.location.origin + '/api.php'
-        ];
-
+        // API Configuration - simpler approach for better compatibility
         this.API_BASE = './api.php';
-        console.log('🌐 API Endpoints to try:', this.API_ENDPOINTS);
+        console.log('🌐 API Base URL:', this.API_BASE);
 
         this.initWithAPIDetection();
     }
@@ -35,32 +27,26 @@ class ProfessionalBlogApp {
     async initWithAPIDetection() {
         console.log('🔍 Detecting API availability...');
 
-        // Try to find working API endpoint
-        for (const endpoint of this.API_ENDPOINTS) {
-            try {
-                console.log(`🧪 Testing API endpoint: ${endpoint}`);
-                const response = await fetch(endpoint + '/posts', {
-                    method: 'GET',
-                    headers: { 'Accept': 'application/json' }
-                });
+        try {
+            // Simple test - just call api.php directly
+            console.log(`🧪 Testing API endpoint: ${this.API_BASE}`);
+            const response = await fetch(this.API_BASE, {
+                method: 'GET',
+                headers: { 'Accept': 'application/json' }
+            });
 
-                if (response.ok || response.status === 404) {
-                    this.API_BASE = endpoint;
-                    this.apiAvailable = true;
-                    console.log(`✅ API found at: ${endpoint}`);
-                    break;
-                }
-            } catch (error) {
-                console.log(`❌ API not available at: ${endpoint}`);
-                continue;
+            console.log('📡 API Response Status:', response.status);
+
+            if (response.ok) {
+                this.apiAvailable = true;
+                console.log(`✅ API found and working`);
+                await this.initWithAPI();
+            } else {
+                console.log(`⚠️ API returned ${response.status}, trying offline mode`);
+                await this.initOffline();
             }
-        }
-
-        if (this.apiAvailable) {
-            console.log('🌐 API Mode: Full functionality');
-            await this.initWithAPI();
-        } else {
-            console.log('📱 Offline Mode: Limited functionality');
+        } catch (error) {
+            console.log(`❌ API not available:`, error);
             await this.initOffline();
         }
     }
@@ -95,13 +81,19 @@ class ProfessionalBlogApp {
         console.log('📱 App initialized in offline mode');
     }
 
+    // FIXED API REQUEST METHOD - simplified and more robust
     async apiRequest(endpoint, method = 'GET', data = null) {
         if (!this.apiAvailable) {
             throw new Error('API not available - offline mode');
         }
 
         try {
-            const url = `${this.API_BASE}/${endpoint}`;
+            // Simplified URL construction - let PHP handle routing
+            let url = this.API_BASE;
+            if (endpoint && endpoint !== 'posts') {
+                url += `?endpoint=${endpoint}`;
+            }
+
             console.log(`🌐 API ${method}:`, url);
 
             const options = {
@@ -117,11 +109,15 @@ class ProfessionalBlogApp {
                     data.admin = this.admin.credentials;
                 }
                 options.body = JSON.stringify(data);
+                console.log('📤 Sending data:', data);
             }
 
             const response = await fetch(url, options);
+            console.log(`📡 Response status: ${response.status}`);
 
             if (!response.ok) {
+                const errorText = await response.text();
+                console.error('❌ API Error Response:', errorText);
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
 
@@ -249,6 +245,7 @@ class ProfessionalBlogApp {
 
             const post = this.posts.find(p => p.id === postId);
             if (post) {
+                post.comments = post.comments || [];
                 post.comments.push(result.data);
             }
 
@@ -947,4 +944,4 @@ if (document.readyState === 'complete' || document.readyState === 'interactive')
     document.addEventListener('DOMContentLoaded', initProfessionalBlogApp);
 }
 
-console.log('✅ Professional Blog Application script loaded!');
+console.log('✅ Professional Blog Application script loaded - API Fixed!');

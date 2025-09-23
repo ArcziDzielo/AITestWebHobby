@@ -2,8 +2,9 @@
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-header('Access-Control-Allow-Headers: Content-Type, Authorization');
+header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With');
 
+// Handle preflight requests
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
@@ -19,6 +20,7 @@ class BlogAPI {
         $this->postsFile = $this->dataDir . '/posts.json';
         $this->settingsFile = $this->dataDir . '/settings.json';
 
+        // Ensure data directory exists
         if (!is_dir($this->dataDir)) {
             mkdir($this->dataDir, 0755, true);
         }
@@ -47,27 +49,11 @@ class BlogAPI {
                 ],
                 [
                     'id' => 2,
-                    'title' => 'Jak korzystać z bloga',
-                    'content' => 'Ten blog oferuje profesjonalną funkcjonalność:\n\n**Dla czytelników:**\n- Przeglądanie wpisów w dwukolumnowym układzie\n- Dodawanie komentarzy\n- Responsywny design na wszystkich urządzeniach\n\n**Dla administratora:**\n- Logowanie: admin / admin123\n- Dodawanie nowych wpisów\n- Edycja istniejących wpisów\n- Usuwanie wpisów\n- Zarządzanie komentarzami\n\n**Techniczne:**\n- Server-side storage (pliki JSON)\n- Real-time synchronizacja\n- RESTful API\n- Zabezpieczenia CORS\n- Responsive design',
-                    'imageUrl' => 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=600&h=400&fit=crop',
-                    'date' => date('Y-m-d', strtotime('-1 day')),
-                    'comments' => []
-                ],
-                [
-                    'id' => 3,
                     'title' => 'Dwukolumnowy układ wpisów',
                     'content' => 'Blog wykorzystuje nowoczesny dwukolumnowy układ wpisów, który automatycznie dostosowuje się do rozmiaru ekranu.\n\n**Desktop:** Wpisy w dwóch kolumnach obok siebie\n**Tablet:** Wpisy w jednej kolumnie\n**Mobile:** Zoptymalizowany układ mobilny\n\nTaki układ zapewnia lepsze wykorzystanie przestrzeni i czytelność na różnych urządzeniach.',
                     'imageUrl' => 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?w=600&h=400&fit=crop',
-                    'date' => date('Y-m-d', strtotime('-2 days')),
-                    'comments' => [
-                        [
-                            'id' => 2,
-                            'authorName' => 'Test User',
-                            'authorEmail' => 'test@example.com',
-                            'content' => 'Świetny układ! Bardzo czytelny i nowoczesny.',
-                            'date' => date('Y-m-d', strtotime('-1 day'))
-                        ]
-                    ]
+                    'date' => date('Y-m-d', strtotime('-1 day')),
+                    'comments' => []
                 ]
             ];
 
@@ -76,8 +62,8 @@ class BlogAPI {
 
         if (!file_exists($this->settingsFile)) {
             $defaultSettings = [
-                'nextPostId' => 4,
-                'nextCommentId' => 4,
+                'nextPostId' => 3,
+                'nextCommentId' => 2,
                 'adminLogin' => 'admin',
                 'adminPasswordHash' => password_hash('admin123', PASSWORD_DEFAULT),
                 'adminEmail' => 'admin@blog.pl'
@@ -117,79 +103,140 @@ class BlogAPI {
                password_verify($credentials['password'], $settings['adminPasswordHash']);
     }
 
-    public function handleRequest() {
-        $method = $_SERVER['REQUEST_METHOD'];
-        $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+    private function parseEndpoint() {
+        // Multiple ways to determine endpoint - handle different server configurations
+        $endpoint = '';
 
-        $pathParts = array_filter(explode('/', trim($path, '/')));
-        $endpoint = end($pathParts);
+        // Method 1: Check query parameters (for direct calls like api.php?endpoint=posts)
+        if (isset($_GET['endpoint'])) {
+            $endpoint = $_GET['endpoint'];
+        }
+        // Method 2: Parse REQUEST_URI
+        elseif (isset($_SERVER['REQUEST_URI'])) {
+            $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
+            $pathParts = array_filter(explode('/', trim($uri, '/')));
 
-        if (empty($endpoint) || $endpoint === 'api.php') {
+            // Look for endpoint after 'api.php' or as last segment
+            $foundApi = false;
+            foreach ($pathParts as $part) {
+                if ($foundApi) {
+                    $endpoint = $part;
+                    break;
+                } elseif ($part === 'api.php' || $part === 'api') {
+                    $foundApi = true;
+                } else {
+                    $endpoint = $part; // Keep updating until we find the right one
+                }
+            }
+        }
+        // Method 3: Check PATH_INFO
+        elseif (isset($_SERVER['PATH_INFO'])) {
+            $endpoint = trim($_SERVER['PATH_INFO'], '/');
+        }
+
+        // Default to 'posts' if no specific endpoint found
+        if (empty($endpoint) || $endpoint === 'api.php' || $endpoint === 'api') {
             $endpoint = 'posts';
         }
 
-        error_log("API Request: $method $path -> endpoint: $endpoint");
+        return $endpoint;
+    }
+
+    public function handleRequest() {
+        $method = $_SERVER['REQUEST_METHOD'];
+        $endpoint = $this->parseEndpoint();
+
+        // Log for debugging
+        error_log("BlogAPI: Method=$method, Endpoint=$endpoint, URI=" . ($_SERVER['REQUEST_URI'] ?? 'N/A'));
 
         try {
+            // Route to appropriate handler
             switch ($endpoint) {
                 case 'posts':
-                    if ($method === 'GET') {
-                        $this->getPosts();
-                    } elseif ($method === 'POST') {
-                        $this->createPost();
-                    } else {
-                        $this->sendError(405, 'Method not allowed');
-                    }
+                    $this->handlePosts($method);
                     break;
 
                 case 'post':
-                    if ($method === 'PUT') {
-                        $this->updatePost();
-                    } elseif ($method === 'DELETE') {
-                        $this->deletePost();
-                    } else {
-                        $this->sendError(405, 'Method not allowed');
-                    }
+                    $this->handlePost($method);
                     break;
 
                 case 'comment':
-                    if ($method === 'POST') {
-                        $this->addComment();
-                    } else {
-                        $this->sendError(405, 'Method not allowed');
-                    }
+                    $this->handleComment($method);
                     break;
 
                 case 'login':
-                    if ($method === 'POST') {
-                        $this->login();
-                    } else {
-                        $this->sendError(405, 'Method not allowed');
-                    }
+                    $this->handleLogin($method);
                     break;
 
                 case 'stats':
-                    if ($method === 'GET') {
-                        $this->getStats();
-                    } else {
-                        $this->sendError(405, 'Method not allowed');
-                    }
+                    $this->handleStats($method);
                     break;
 
                 default:
-                    $this->sendError(404, 'Endpoint not found: ' . $endpoint);
+                    // If no matching endpoint, try to handle as posts (fallback)
+                    if ($method === 'GET') {
+                        $this->handlePosts($method);
+                    } else {
+                        $this->sendError(404, "Unknown endpoint: $endpoint");
+                    }
             }
         } catch (Exception $e) {
             error_log("API Error: " . $e->getMessage());
-            $this->sendError(500, 'Internal server error');
+            $this->sendError(500, 'Internal server error: ' . $e->getMessage());
+        }
+    }
+
+    private function handlePosts($method) {
+        if ($method === 'GET') {
+            $this->getPosts();
+        } elseif ($method === 'POST') {
+            $this->createPost();
+        } else {
+            $this->sendError(405, "Method $method not allowed for posts endpoint");
+        }
+    }
+
+    private function handlePost($method) {
+        if ($method === 'PUT') {
+            $this->updatePost();
+        } elseif ($method === 'DELETE') {
+            $this->deletePost();
+        } else {
+            $this->sendError(405, "Method $method not allowed for post endpoint");
+        }
+    }
+
+    private function handleComment($method) {
+        if ($method === 'POST') {
+            $this->addComment();
+        } else {
+            $this->sendError(405, "Method $method not allowed for comment endpoint");
+        }
+    }
+
+    private function handleLogin($method) {
+        if ($method === 'POST') {
+            $this->login();
+        } else {
+            $this->sendError(405, "Method $method not allowed for login endpoint");
+        }
+    }
+
+    private function handleStats($method) {
+        if ($method === 'GET') {
+            $this->getStats();
+        } else {
+            $this->sendError(405, "Method $method not allowed for stats endpoint");
         }
     }
 
     private function getPosts() {
         $posts = $this->loadPosts();
+        // Sort by date descending (newest first)
         usort($posts, function($a, $b) {
             return strtotime($b['date']) - strtotime($a['date']);
         });
+
         $this->sendSuccess($posts);
     }
 
@@ -197,7 +244,7 @@ class BlogAPI {
         $input = json_decode(file_get_contents('php://input'), true);
 
         if (!$this->validateAdmin($input['admin'] ?? [])) {
-            $this->sendError(401, 'Unauthorized');
+            $this->sendError(401, 'Unauthorized - admin credentials required');
             return;
         }
 
@@ -221,7 +268,7 @@ class BlogAPI {
             'comments' => []
         ];
 
-        array_unshift($posts, $newPost);
+        array_unshift($posts, $newPost); // Add to beginning
 
         if ($this->savePosts($posts)) {
             $settings['nextPostId']++;
@@ -236,7 +283,7 @@ class BlogAPI {
         $input = json_decode(file_get_contents('php://input'), true);
 
         if (!$this->validateAdmin($input['admin'] ?? [])) {
-            $this->sendError(401, 'Unauthorized');
+            $this->sendError(401, 'Unauthorized - admin credentials required');
             return;
         }
 
@@ -260,6 +307,7 @@ class BlogAPI {
             return;
         }
 
+        // Update post fields
         if (isset($input['title'])) $posts[$postIndex]['title'] = trim($input['title']);
         if (isset($input['content'])) $posts[$postIndex]['content'] = trim($input['content']);
         if (isset($input['imageUrl'])) $posts[$postIndex]['imageUrl'] = trim($input['imageUrl']);
@@ -275,7 +323,7 @@ class BlogAPI {
         $input = json_decode(file_get_contents('php://input'), true);
 
         if (!$this->validateAdmin($input['admin'] ?? [])) {
-            $this->sendError(401, 'Unauthorized');
+            $this->sendError(401, 'Unauthorized - admin credentials required');
             return;
         }
 
@@ -291,7 +339,7 @@ class BlogAPI {
             return $post['id'] != $input['id'];
         });
 
-        $posts = array_values($posts);
+        $posts = array_values($posts); // Re-index array
 
         if (count($posts) < $originalCount) {
             if ($this->savePosts($posts)) {
@@ -390,11 +438,13 @@ class BlogAPI {
         http_response_code($code);
         echo json_encode([
             'success' => false,
-            'error' => $message
+            'error' => $message,
+            'code' => $code
         ], JSON_UNESCAPED_UNICODE);
     }
 }
 
+// Initialize and handle request
 try {
     $api = new BlogAPI();
     $api->handleRequest();
@@ -403,7 +453,8 @@ try {
     http_response_code(500);
     echo json_encode([
         'success' => false,
-        'error' => 'Internal server error'
+        'error' => 'Internal server error',
+        'debug' => $e->getMessage()
     ], JSON_UNESCAPED_UNICODE);
 }
 ?>

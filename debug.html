@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Debug - HTTP 405 Fix</title>
+    <style>
+        body { font-family: system-ui; margin: 2rem; line-height: 1.6; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .debug-section { margin: 2rem 0; padding: 1rem; border: 1px solid #ccc; border-radius: 0.5rem; }
+        .debug-section h3 { margin-top: 0; color: #333; }
+        button { padding: 0.5rem 1rem; margin: 0.25rem; border: none; border-radius: 0.25rem; cursor: pointer; }
+        .btn-primary { background: #007bff; color: white; }
+        .btn-success { background: #28a745; color: white; }
+        .btn-danger { background: #dc3545; color: white; }
+        .log { background: #f8f9fa; padding: 1rem; border-radius: 0.25rem; font-family: monospace; font-size: 0.875rem; max-height: 300px; overflow-y: auto; }
+        .success { color: #28a745; }
+        .error { color: #dc3545; }
+        .info { color: #007bff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔧 API Debug Tool - HTTP 405 Fix Checker</h1>
+        <p>Sprawdza czy błąd HTTP 405 został naprawiony. Kliknij przycisk "Test API" aby rozpocząć.</p>
+
+        <div class="debug-section">
+            <h3>📡 Test API</h3>
+            <button class="btn-primary" onclick="testAPI()">Test API Connection</button>
+            <div id="apiLog" class="log"></div>
+        </div>
+
+        <div class="debug-section">
+            <h3>🔐 Test Logowania</h3>
+            <button class="btn-success" onclick="testLogin()">Test Login (admin/admin123)</button>
+            <div id="loginLog" class="log"></div>
+        </div>
+
+        <div class="debug-section">
+            <h3>📝 Test CRUD Operacji</h3>
+            <button class="btn-primary" onclick="testCRUD()">Test Create/Update/Delete</button>
+            <div id="crudLog" class="log"></div>
+        </div>
+    </div>
+
+    <script>
+        let credentials = { login: 'admin', password: 'admin123' };
+
+        function log(containerId, message, type = 'info') {
+            const container = document.getElementById(containerId);
+            const timestamp = new Date().toLocaleTimeString();
+            const logEntry = document.createElement('div');
+            logEntry.className = type;
+            logEntry.innerHTML = `[${timestamp}] ${message}`;
+            container.appendChild(logEntry);
+            container.scrollTop = container.scrollHeight;
+        }
+
+        async function apiRequest(endpoint, method = 'GET', data = null) {
+            let url = './api.php';
+            if (endpoint && endpoint !== 'posts') {
+                url += `?endpoint=${endpoint}`;
+            }
+
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Accept': 'application/json'
+                }
+            };
+
+            if (data && (method === 'POST' || method === 'PUT' || method === 'DELETE')) {
+                if (credentials) {
+                    data.admin = credentials;
+                }
+                options.body = JSON.stringify(data);
+            }
+
+            const response = await fetch(url, options);
+            let result;
+            try {
+                result = await response.json();
+            } catch (e) {
+                result = { error: 'Invalid JSON response' };
+            }
+
+            return { response, result, status: response.status };
+        }
+
+        async function testAPI() {
+            log('apiLog', '🧪 Testowanie połączenia z API...', 'info');
+
+            try {
+                const { response, result, status } = await apiRequest('posts');
+
+                if (status === 405) {
+                    log('apiLog', '❌ BŁĄD HTTP 405 - Method Not Allowed!', 'error');
+                    log('apiLog', 'Problem nadal istnieje - sprawdź routing w api.php', 'error');
+                } else if (status === 200) {
+                    log('apiLog', '✅ API działa prawidłowo! HTTP 200', 'success');
+                    log('apiLog', `📊 Załadowano ${result.data?.length || 0} wpisów`, 'success');
+                } else {
+                    log('apiLog', `⚠️ Nieoczekiwany status: ${status}`, 'error');
+                    log('apiLog', `Odpowiedź: ${JSON.stringify(result)}`, 'info');
+                }
+            } catch (error) {
+                log('apiLog', `❌ Błąd połączenia: ${error.message}`, 'error');
+            }
+        }
+
+        async function testLogin() {
+            log('loginLog', '🔐 Testowanie logowania...', 'info');
+
+            try {
+                const { response, result, status } = await apiRequest('login', 'POST', credentials);
+
+                if (status === 405) {
+                    log('loginLog', '❌ BŁĄD HTTP 405 na endpoint login!', 'error');
+                } else if (status === 200 && result.success) {
+                    log('loginLog', '✅ Logowanie działa!', 'success');
+                } else {
+                    log('loginLog', `❌ Logowanie nieudane: ${result.error}`, 'error');
+                }
+            } catch (error) {
+                log('loginLog', `❌ Błąd: ${error.message}`, 'error');
+            }
+        }
+
+        async function testCRUD() {
+            log('crudLog', '📝 Testowanie operacji CRUD...', 'info');
+
+            // Test POST
+            try {
+                const postData = {
+                    title: 'Test HTTP 405 Fix',
+                    content: 'Testowy wpis sprawdzający czy błąd HTTP 405 został naprawiony.'
+                };
+
+                const { status } = await apiRequest('posts', 'POST', postData);
+
+                if (status === 405) {
+                    log('crudLog', '❌ BŁĄD HTTP 405 na POST /posts!', 'error');
+                } else if (status === 200) {
+                    log('crudLog', '✅ POST /posts działa!', 'success');
+                } else {
+                    log('crudLog', `⚠️ POST /posts status: ${status}`, 'info');
+                }
+            } catch (error) {
+                log('crudLog', `❌ POST error: ${error.message}`, 'error');
+            }
+
+            // Test PUT
+            try {
+                const updateData = { id: 1, title: 'Updated via test' };
+                const { status } = await apiRequest('post', 'PUT', updateData);
+
+                if (status === 405) {
+                    log('crudLog', '❌ BŁĄD HTTP 405 na PUT /post!', 'error');
+                } else {
+                    log('crudLog', `✅ PUT /post status: ${status}`, 'success');
+                }
+            } catch (error) {
+                log('crudLog', `❌ PUT error: ${error.message}`, 'error');
+            }
+
+            // Test DELETE
+            try {
+                const { status } = await apiRequest('post', 'DELETE', { id: 999 });
+
+                if (status === 405) {
+                    log('crudLog', '❌ BŁĄD HTTP 405 na DELETE /post!', 'error');
+                } else {
+                    log('crudLog', `✅ DELETE /post status: ${status}`, 'success');
+                }
+            } catch (error) {
+                log('crudLog', `❌ DELETE error: ${error.message}`, 'error');
+            }
+        }
+
+        // Auto-test po załadowaniu
+        window.addEventListener('load', () => {
+            setTimeout(testAPI, 1000);
+        });
+    </script>
+</body>
+</html>
