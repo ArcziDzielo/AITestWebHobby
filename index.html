@@ -8,45 +8,13 @@
     <meta name="keywords" content="hobby, DIY, majsterkowanie, blog, rękodzieło, twórczość">
     <meta name="author" content="Passion Hub">
 
-    <!-- Open Graph / Facebook -->
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://1lo.hobby/">
-    <meta property="og:title" content="Passion Hub - Profesjonalny Blog o Hobby">
-    <meta property="og:description" content="Odkryj radość tworzenia własnymi rękami">
-    <meta property="og:image" content="https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=1200&h=630&fit=crop">
-
-    <!-- Twitter -->
-    <meta property="twitter:card" content="summary_large_image">
-    <meta property="twitter:url" content="https://1lo.hobby/">
-    <meta property="twitter:title" content="Passion Hub - Profesjonalny Blog o Hobby">
-    <meta property="twitter:description" content="Odkryj radość tworzenia własnymi rękami">
-    <meta property="twitter:image" content="https://images.unsplash.com/photo-1601758228041-f3b2795255f1?w=1200&h=630&fit=crop">
-
-    <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🐕</text></svg>">
-
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Styles -->
-    <link rel="stylesheet" href="style-professional.css">
-
-    <!-- Schema.org markup -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "Blog",
-      "name": "Passion Hub - Blog o Hobby",
-      "description": "Profesjonalny blog o hobby, majsterkowaniu i DIY",
-      "url": "https://1lo.hobby/",
-      "author": {
-        "@type": "Person",
-        "name": "Admin"
-      }
-    }
-    </script>
+    <!-- NAPRAWIONY LINK DO CSS -->
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <!-- Professional Header -->
@@ -282,57 +250,7 @@
         <!-- Toast notifications will be inserted here dynamically -->
     </div>
 
-    <!-- Loading Indicator (hidden by default) -->
-    <div id="loadingIndicator" style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999; background: white; padding: 2rem; border-radius: 1rem; box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1); display: none;">
-        <div style="text-align: center;">
-            <div style="width: 40px; height: 40px; border: 4px solid #f3f4f6; border-top: 4px solid #f59e0b; border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 1rem;"></div>
-            <p style="margin: 0; color: #6b7280; font-size: 0.875rem;">Ładowanie danych z serwera...</p>
-        </div>
-    </div>
-
-    <style>
-    @keyframes spin {
-        0% { transform: rotate(0deg); }
-        100% { transform: rotate(360deg); }
-    }
-    </style>
-
-    <!-- Professional JavaScript -->
-    <script src="app-professional.js"></script>
-
-    <!-- Service Worker Registration (for PWA capabilities) -->
-    <script>
-    // Register service worker for PWA capabilities (optional)
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', function() {
-            // navigator.serviceWorker.register('/sw.js'); // Uncomment if you add a service worker
-        });
-    }
-
-    // Add loading indicator functions
-    window.showLoading = function() {
-        document.getElementById('loadingIndicator').style.display = 'block';
-    };
-
-    window.hideLoading = function() {
-        document.getElementById('loadingIndicator').style.display = 'none';
-    };
-
-    // Add global error handler
-    window.addEventListener('error', function(e) {
-        console.error('Global error:', e.error);
-        if (window.blogApp && window.blogApp.showToast) {
-            window.blogApp.showToast('❌ Wystąpił nieoczekiwany błąd', 'error');
-        }
-    });
-
-    // Add unhandled promise rejection handler
-    window.addEventListener('unhandledrejection', function(e) {
-        console.error('Unhandled promise rejection:', e.reason);
-        if (window.blogApp && window.blogApp.showToast) {
-            window.blogApp.showToast('❌ Wystąpił błąd połączenia', 'error');
-        }
-    });
-    </script>
+    <!-- NAPRAWIONY LINK DO JAVASCRIPT -->
+    <script src="app.js"></script>
 </body>
 </html>
