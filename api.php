@@ -4,7 +4,6 @@ header('Access-Control-Allow-Origin: *');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
-// Handle preflight requests
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
@@ -20,12 +19,10 @@ class BlogAPI {
         $this->postsFile = $this->dataDir . '/posts.json';
         $this->settingsFile = $this->dataDir . '/settings.json';
 
-        // Ensure data directory exists
         if (!is_dir($this->dataDir)) {
             mkdir($this->dataDir, 0755, true);
         }
 
-        // Initialize files if they don't exist
         $this->initializeFiles();
     }
 
@@ -91,9 +88,7 @@ class BlogAPI {
     }
 
     private function loadPosts() {
-        if (!file_exists($this->postsFile)) {
-            return [];
-        }
+        if (!file_exists($this->postsFile)) return [];
         $content = file_get_contents($this->postsFile);
         return json_decode($content, true) ?: [];
     }
@@ -103,9 +98,7 @@ class BlogAPI {
     }
 
     private function loadSettings() {
-        if (!file_exists($this->settingsFile)) {
-            return [];
-        }
+        if (!file_exists($this->settingsFile)) return [];
         $content = file_get_contents($this->settingsFile);
         return json_decode($content, true) ?: [];
     }
@@ -128,11 +121,9 @@ class BlogAPI {
         $method = $_SERVER['REQUEST_METHOD'];
         $path = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-        // Extract endpoint from path - handle both /api/posts and /posts
         $pathParts = array_filter(explode('/', trim($path, '/')));
         $endpoint = end($pathParts);
 
-        // If no endpoint, default based on method
         if (empty($endpoint) || $endpoint === 'api.php') {
             $endpoint = 'posts';
         }
@@ -190,17 +181,15 @@ class BlogAPI {
             }
         } catch (Exception $e) {
             error_log("API Error: " . $e->getMessage());
-            $this->sendError(500, 'Internal server error: ' . $e->getMessage());
+            $this->sendError(500, 'Internal server error');
         }
     }
 
     private function getPosts() {
         $posts = $this->loadPosts();
-        // Sort by date descending (newest first)
         usort($posts, function($a, $b) {
             return strtotime($b['date']) - strtotime($a['date']);
         });
-
         $this->sendSuccess($posts);
     }
 
@@ -232,7 +221,7 @@ class BlogAPI {
             'comments' => []
         ];
 
-        array_unshift($posts, $newPost); // Add to beginning
+        array_unshift($posts, $newPost);
 
         if ($this->savePosts($posts)) {
             $settings['nextPostId']++;
@@ -271,7 +260,6 @@ class BlogAPI {
             return;
         }
 
-        // Update post fields
         if (isset($input['title'])) $posts[$postIndex]['title'] = trim($input['title']);
         if (isset($input['content'])) $posts[$postIndex]['content'] = trim($input['content']);
         if (isset($input['imageUrl'])) $posts[$postIndex]['imageUrl'] = trim($input['imageUrl']);
@@ -303,7 +291,7 @@ class BlogAPI {
             return $post['id'] != $input['id'];
         });
 
-        $posts = array_values($posts); // Re-index array
+        $posts = array_values($posts);
 
         if (count($posts) < $originalCount) {
             if ($this->savePosts($posts)) {
@@ -407,7 +395,6 @@ class BlogAPI {
     }
 }
 
-// Initialize and handle request
 try {
     $api = new BlogAPI();
     $api->handleRequest();

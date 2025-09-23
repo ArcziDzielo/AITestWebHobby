@@ -20,10 +20,10 @@ class ProfessionalBlogApp {
 
         // API Configuration - multiple fallbacks
         this.API_ENDPOINTS = [
-            './api.php',                    // Same directory
-            '/api.php',                     // Root directory
-            '../api.php',                   // Parent directory
-            window.location.origin + '/api.php'  // Absolute URL
+            './api.php',
+            '/api.php',
+            '../api.php',
+            window.location.origin + '/api.php'
         ];
 
         this.API_BASE = './api.php';
@@ -41,13 +41,10 @@ class ProfessionalBlogApp {
                 console.log(`🧪 Testing API endpoint: ${endpoint}`);
                 const response = await fetch(endpoint + '/posts', {
                     method: 'GET',
-                    headers: {
-                        'Accept': 'application/json'
-                    }
+                    headers: { 'Accept': 'application/json' }
                 });
 
                 if (response.ok || response.status === 404) {
-                    // API exists (even if returns 404 for /posts path)
                     this.API_BASE = endpoint;
                     this.apiAvailable = true;
                     console.log(`✅ API found at: ${endpoint}`);
@@ -98,8 +95,6 @@ class ProfessionalBlogApp {
         console.log('📱 App initialized in offline mode');
     }
 
-    // ===== API COMMUNICATION METHODS =====
-
     async apiRequest(endpoint, method = 'GET', data = null) {
         if (!this.apiAvailable) {
             throw new Error('API not available - offline mode');
@@ -118,7 +113,6 @@ class ProfessionalBlogApp {
             };
 
             if (data && (method === 'POST' || method === 'PUT' || method === 'DELETE')) {
-                // Add admin credentials for protected endpoints
                 if (this.admin.credentials) {
                     data.admin = this.admin.credentials;
                 }
@@ -165,7 +159,7 @@ class ProfessionalBlogApp {
             {
                 id: 1,
                 title: "Przykładowy wpis - Tryb Offline",
-                content: "To jest przykładowy wpis, ponieważ API nie jest dostępne.\n\nW trybie offline możesz:- Przeglądać przykładowe wpisy- Testować interfejs- Zalogować się (admin/admin123)\n\nAby uzyskać pełną funkcjonalność, wgraj pliki na serwer PHP z działającym api.php",
+                content: "To jest przykładowy wpis, ponieważ API nie jest dostępne.\n\nW trybie offline możesz:\n- Przeglądać przykładowe wpisy\n- Testować interfejs\n- Zalogować się (admin/admin123)\n\nAby uzyskać pełną funkcjonalność, wgraj pliki na serwer PHP z działającym api.php",
                 imageUrl: "https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?w=600&h=400&fit=crop",
                 date: "2024-03-15",
                 comments: [
@@ -176,14 +170,6 @@ class ProfessionalBlogApp {
                         date: "2024-03-16"
                     }
                 ]
-            },
-            {
-                id: 2,
-                title: "Instrukcje instalacji API",
-                content: "Aby uzyskać pełną funkcjonalność bloga:1. Wgraj wszystkie pliki na hosting PHP2. Upewnij się że api.php jest dostępny3. Sprawdź uprawnienia folderu data/ (755)4. Folder data/ musi mieć prawo zapisu\n\nPo prawidłowej instalacji będziesz mógł dodawać, edytować i usuwać wpisy.",
-                imageUrl: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=600&h=400&fit=crop",
-                date: "2024-03-14",
-                comments: []
             }
         ];
     }
@@ -198,11 +184,9 @@ class ProfessionalBlogApp {
             console.log('💾 Saving post to API:', postData);
 
             if (this.currentEditId) {
-                // Update existing post
                 postData.id = this.currentEditId;
                 const result = await this.apiRequest('post', 'PUT', postData);
 
-                // Update local data
                 const postIndex = this.posts.findIndex(p => p.id === this.currentEditId);
                 if (postIndex !== -1) {
                     this.posts[postIndex] = result.data;
@@ -211,12 +195,8 @@ class ProfessionalBlogApp {
                 this.showToast('✅ Wpis został zaktualizowany!', 'success');
 
             } else {
-                // Create new post
                 const result = await this.apiRequest('posts', 'POST', postData);
-
-                // Add to local data
                 this.posts.unshift(result.data);
-
                 this.showToast('🎉 Nowy wpis został dodany!', 'success');
             }
 
@@ -238,8 +218,6 @@ class ProfessionalBlogApp {
             console.log('🗑️ Deleting post from API:', postId);
 
             await this.apiRequest('post', 'DELETE', { id: postId });
-
-            // Remove from local data
             this.posts = this.posts.filter(p => p.id !== postId);
 
             this.showToast('🗑️ Wpis został usunięty!', 'success');
@@ -269,7 +247,6 @@ class ProfessionalBlogApp {
 
             const result = await this.apiRequest('comment', 'POST', data);
 
-            // Update local data
             const post = this.posts.find(p => p.id === postId);
             if (post) {
                 post.comments.push(result.data);
@@ -287,44 +264,36 @@ class ProfessionalBlogApp {
     setupEventListeners() {
         console.log('🔗 Setting up event listeners...');
 
-        // Login button
         const loginBtn = document.getElementById('loginBtn');
         if (loginBtn) {
             loginBtn.addEventListener('click', () => this.showLoginModal());
         }
 
-        // Logout button
         const logoutBtn = document.getElementById('logoutBtn');
         if (logoutBtn) {
             logoutBtn.addEventListener('click', () => this.logout());
         }
 
-        // Add post button
         const addPostBtn = document.getElementById('addPostBtn');
         if (addPostBtn) {
             addPostBtn.addEventListener('click', () => this.showAddPostModal());
         }
 
-        // Login form
         const loginForm = document.getElementById('loginForm');
         if (loginForm) {
             loginForm.addEventListener('submit', (e) => this.handleLogin(e));
         }
 
-        // Post form
         const postForm = document.getElementById('postForm');
         if (postForm) {
             postForm.addEventListener('submit', (e) => this.handlePostSubmit(e));
         }
 
-        // Modal close handlers
         this.setupModalHandlers();
-
         console.log('✅ Event listeners set up');
     }
 
     setupModalHandlers() {
-        // Close modals
         document.querySelectorAll('.modal__close').forEach(btn => {
             btn.addEventListener('click', () => this.hideAllModals());
         });
@@ -333,7 +302,6 @@ class ProfessionalBlogApp {
             overlay.addEventListener('click', () => this.hideAllModals());
         });
 
-        // Cancel buttons
         const loginCancel = document.getElementById('loginCancel');
         const postCancel = document.getElementById('postCancel');
         const deleteCancel = document.getElementById('deleteCancel');
@@ -342,13 +310,11 @@ class ProfessionalBlogApp {
         if (postCancel) postCancel.addEventListener('click', () => this.hidePostModal());
         if (deleteCancel) deleteCancel.addEventListener('click', () => this.hideDeleteModal());
 
-        // Delete confirm
         const deleteConfirm = document.getElementById('deleteConfirm');
         if (deleteConfirm) {
             deleteConfirm.addEventListener('click', () => this.confirmDelete());
         }
 
-        // ESC key
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') {
                 this.hideAllModals();
@@ -356,7 +322,6 @@ class ProfessionalBlogApp {
         });
     }
 
-    // Authentication methods
     showLoginModal() {
         const loginModal = document.getElementById('loginModal');
         if (loginModal) {
@@ -403,7 +368,6 @@ class ProfessionalBlogApp {
                 console.log('❌ API login failed:', error);
             }
         } else {
-            // Offline mode - simple validation
             if (username === 'admin' && password === 'admin123') {
                 this.admin.isLoggedIn = true;
                 this.admin.login = username;
@@ -453,7 +417,6 @@ class ProfessionalBlogApp {
         this.renderPosts();
     }
 
-    // Post management methods
     showAddPostModal() {
         if (!this.admin.isLoggedIn) {
             this.showToast('🔐 Musisz być zalogowany jako administrator!', 'error');
@@ -611,10 +574,13 @@ class ProfessionalBlogApp {
         this.hideDeleteModal();
     }
 
-    // Rendering methods
     renderPosts() {
         const container = document.getElementById('postsContainer');
         if (!container) return;
+
+        // Remove loading content
+        const loading = document.getElementById('loadingContent');
+        if (loading) loading.style.display = 'none';
 
         if (this.posts.length === 0) {
             container.innerHTML = `
@@ -623,7 +589,7 @@ class ProfessionalBlogApp {
                         <h2>📝 Brak wpisów</h2>
                         <p>Nie ma jeszcze żadnych wpisów na blogu.</p>
                         ${this.admin.isLoggedIn && this.apiAvailable ? '<p><strong>Jako administrator możesz dodać pierwszy wpis!</strong></p>' : ''}
-                        ${!this.apiAvailable ? '<div class="info-box"><p><strong>💡 Tryb Offline:</strong> Aby dodawać wpisy, wgraj pliki na serwer PHP z api.php</p></div>' : ''}
+                        ${!this.apiAvailable ? '<div style="margin-top: 1rem; padding: 1rem; background: #fef3c7; border: 1px solid #fbbf24; border-radius: 0.5rem; color: #92400e;"><p style="margin: 0; font-size: 0.875rem;"><strong>💡 Tryb Offline:</strong> Aby dodawać wpisy, wgraj pliki na serwer PHP z api.php</p></div>' : ''}
                     </div>
                 </div>
             `;
@@ -776,7 +742,6 @@ class ProfessionalBlogApp {
     }
 
     attachPostEventListeners() {
-        // Edit buttons
         document.querySelectorAll('.edit-post-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -785,7 +750,6 @@ class ProfessionalBlogApp {
             });
         });
 
-        // Delete buttons
         document.querySelectorAll('.delete-post-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 e.preventDefault();
@@ -794,7 +758,6 @@ class ProfessionalBlogApp {
             });
         });
 
-        // Comment forms
         document.querySelectorAll('.comment-form-inner').forEach(form => {
             form.addEventListener('submit', (e) => {
                 e.preventDefault();
@@ -861,29 +824,31 @@ class ProfessionalBlogApp {
     }
 
     showOfflineNotice() {
-        const notice = `
-            <div style="position: fixed; top: 20px; left: 20px; right: 20px; background: linear-gradient(135deg, #fef3c7, #fde68a); border: 2px solid #fbbf24; border-radius: 1rem; padding: 1rem; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); z-index: 1000; color: #92400e;">
-                <div style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600; margin-bottom: 0.5rem;">
-                    📱 <span>Tryb Offline</span>
-                </div>
-                <p style="margin: 0; font-size: 0.875rem;">
-                    API nie jest dostępne. Funkcje dodawania/edycji/usuwania wpisów są wyłączone. 
-                    <strong>Aby uzyskać pełną funkcjonalność, wgraj pliki na hosting PHP.</strong>
-                </p>
-                <button onclick="this.parentElement.style.display='none'" style="position: absolute; top: 0.5rem; right: 0.5rem; background: none; border: none; font-size: 1.25rem; cursor: pointer; color: #92400e;">&times;</button>
-            </div>
+        const notice = document.createElement('div');
+        notice.style.cssText = `
+            position: fixed; top: 20px; left: 20px; right: 20px; 
+            background: linear-gradient(135deg, #fef3c7, #fde68a); 
+            border: 2px solid #fbbf24; border-radius: 1rem; padding: 1rem; 
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1); z-index: 1000; 
+            color: #92400e;
         `;
 
-        document.body.insertAdjacentHTML('beforeend', notice);
+        notice.innerHTML = `
+            <div style="display: flex; align-items: center; gap: 0.5rem; font-weight: 600; margin-bottom: 0.5rem;">
+                📱 <span>Tryb Offline</span>
+            </div>
+            <p style="margin: 0; font-size: 0.875rem;">
+                API nie jest dostępne. Funkcje dodawania/edycji/usuwania wpisów są wyłączone. 
+                <strong>Aby uzyskać pełną funkcjonalność, wgraj pliki na hosting PHP.</strong>
+            </p>
+            <button onclick="this.parentElement.remove()" style="position: absolute; top: 0.5rem; right: 0.5rem; background: none; border: none; font-size: 1.25rem; cursor: pointer; color: #92400e;">&times;</button>
+        `;
 
-        // Auto-hide after 10 seconds
-        setTimeout(() => {
-            const noticeEl = document.querySelector('[style*="Tryb Offline"]')?.parentElement;
-            if (noticeEl) noticeEl.style.display = 'none';
-        }, 10000);
+        document.body.appendChild(notice);
+
+        setTimeout(() => notice.remove(), 10000);
     }
 
-    // Utility methods
     escapeHtml(unsafe) {
         return (unsafe || '')
             .replace(/&/g, "&amp;")
@@ -929,14 +894,12 @@ class ProfessionalBlogApp {
         }, 5000);
     }
 
-    // Debug methods
     debugInfo() {
         console.log('🔍 DEBUG INFO:');
         console.log('📊 Posts:', this.posts.length);
         console.log('🌐 API Available:', this.apiAvailable);
         console.log('🔐 Admin logged in:', this.admin.isLoggedIn);
         console.log('📡 API Base:', this.API_BASE);
-        console.log('👤 Admin:', this.admin);
         return this;
     }
 
@@ -965,7 +928,6 @@ function initProfessionalBlogApp() {
         professionalBlogApp = new ProfessionalBlogApp();
         window.blogApp = professionalBlogApp;
 
-        // Debug methods available in console
         window.debugBlog = () => professionalBlogApp.debugInfo();
         window.refreshBlog = () => professionalBlogApp.refreshFromServer();
 
@@ -977,7 +939,6 @@ function initProfessionalBlogApp() {
     }
 }
 
-// Initialize
 if (document.readyState === 'complete' || document.readyState === 'interactive') {
     console.log('📱 DOM ready, initializing immediately');
     initProfessionalBlogApp();

@@ -1,9 +1,22 @@
-# Data Directory - Automatycznie tworzony
+# Data Directory
 
-Ten folder będzie automatycznie utworzony przez API z przykładowymi wpisami.
+Ten folder jest automatycznie tworzony przez API i zawiera:
 
-Zawiera:
-- posts.json - wszystkie wpisy bloga
-- settings.json - ustawienia administratora
+- `posts.json` - Wszystkie wpisy bloga
+- `settings.json` - Ustawienia administratora
 
-Folder musi mieć uprawnienia zapisu (755).
+## Uprawnienia
+
+Folder `data/` musi mieć uprawnienia zapisu (755).
+API automatycznie utworzy ten folder przy pierwszym uruchomieniu.
+
+## Backup
+
+Regularnie rób kopie zapasowe plików:
+- `data/posts.json` - Twoje wpisy
+- `data/settings.json` - Ustawienia
+
+## Bezpieczeństwo
+
+Pliki w tym folderze są zabezpieczone przez .htaccess
+przed bezpośrednim dostępem z przeglądarki.
